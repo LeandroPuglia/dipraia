@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DiPraia — Gestão de Arena</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="logo.png" alt="DiPraia" onerror="this.style.display='none'">
+      <i class="ti ti-tennis fallback-icon"></i>
+    </div>
+    <h1 class="login-title">DiPraia</h1>
+    <p class="login-sub">Gestão de arena</p>
+    <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
+    <div class="fg"><label>Usuário</label><input id="l-user" type="text" placeholder="seu.usuario" autocomplete="username"></div>
+    <div class="fg"><label>Senha</label><input id="l-pass" type="password" placeholder="••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="mainApp" class="app" style="display:none">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">
+        <img src="logo.png" alt="DiPraia" onerror="this.style.display='none'">
+        <i class="ti ti-tennis fallback-icon-sm"></i>
+      </div>
+      <div class="logo-text">
+        <div class="logo-title">DiPraia</div>
+        <div class="logo-sub">Gestão de arena</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" data-page="dashboard" data-role="admin"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+      <div class="nav-item" data-page="mensalistas" data-role="all"><i class="ti ti-users"></i>Mensalistas</div>
+      <div class="nav-item" data-page="comandas" data-role="all"><i class="ti ti-receipt"></i>Comandas</div>
+      <div class="nav-item" data-page="alertas" data-role="admin"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-section nav-admin-only">Ferramentas</div>
+      <div class="nav-item" data-page="mensagens" data-role="admin"><i class="ti ti-message"></i>Mensagens</div>
+      <div class="nav-item" data-page="relatorio" data-role="admin"><i class="ti ti-chart-bar"></i>Relatório</div>
+      <div class="nav-item" data-page="planos" data-role="admin"><i class="ti ti-tag"></i>Planos</div>
+      <div class="nav-item" data-page="produtos" data-role="admin"><i class="ti ti-shopping-cart"></i>Produtos</div>
+      <div class="nav-item" data-page="usuarios" data-role="admin"><i class="ti ti-shield"></i>Usuários</div>
+    </nav>
+
+    <div class="nav-user">
+      <div class="nav-user-name" id="nav-username"></div>
+      <div class="nav-user-bottom">
+        <div class="nav-user-role" id="nav-userrole"></div>
+        <button class="btn btn-sm" onclick="doLogout()" title="Sair"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="topbar"><h2>Dashboard</h2><span id="dash-date" class="topbar-date"></span></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="card"><div class="card-title"><i class="ti ti-receipt"></i>Comandas em aberto</div><div id="dash-cmds"></div></div>
+      <div class="card"><div class="card-title"><i class="ti ti-clock"></i>Vencendo em 7 dias</div><div id="dash-venc"></div></div>
+      <div class="card"><div class="card-title"><i class="ti ti-alert-circle"></i>Inadimplentes</div><div id="dash-inad"></div></div>
+    </div>
+
+    <!-- MENSALISTAS -->
+    <div id="page-mensalistas" class="page">
+      <div class="topbar">
+        <h2>Mensalistas</h2>
+        <div class="topbar-right">
+          <div class="search-wrap"><i class="ti ti-search"></i><input id="mens-search" type="text" placeholder="Buscar nome..." oninput="renderMens()"></div>
+          <button class="btn btn-primary" onclick="abrirModalMens()"><i class="ti ti-plus"></i>Novo</button>
+        </div>
+      </div>
+      <div class="tab-row" id="tabs-mens">
+        <div class="tab active" data-filter="todos">Todos</div>
+        <div class="tab" data-filter="ativo">Ativos</div>
+        <div class="tab" data-filter="inadimplente">Inadimplentes</div>
+        <div class="tab" data-filter="vencendo">Vencendo</div>
+        <div class="tab" data-filter="sem_plano">Sem plano</div>
+      </div>
+      <div class="card card-table">
+        <table>
+          <thead><tr>
+            <th style="width:44px"></th>
+            <th>Nome</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="width:60px">Ações</th>
+          </tr></thead>
+          <tbody id="tb-mens"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMANDAS -->
+    <div id="page-comandas" class="page">
+      <div class="topbar"><h2>Comandas</h2><button class="btn btn-primary" onclick="abrirModalComanda()"><i class="ti ti-plus"></i>Nova</button></div>
+      <div class="tab-row" id="tabs-cmd">
+        <div class="tab active" data-cfilter="abertas">Abertas</div>
+        <div class="tab" data-cfilter="fechadas">Fechadas</div>
+        <div class="tab" data-cfilter="todas">Todas</div>
+      </div>
+      <div id="lista-comandas"></div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="page-alertas" class="page">
+      <div class="topbar"><h2>Alertas</h2></div>
+      <div class="tab-row" id="tabs-alert">
+        <div class="tab active" data-afilter="todos">Todos</div>
+        <div class="tab" data-afilter="inadimplente">Inadimplentes</div>
+        <div class="tab" data-afilter="vencendo">Vencendo</div>
+        <div class="tab" data-afilter="resgate">Resgatar</div>
+      </div>
+      <div class="card"><div id="lista-alertas"></div></div>
+    </div>
+
+    <!-- MENSAGENS -->
+    <div id="page-mensagens" class="page">
+      <div class="topbar"><h2>Mensagens prontas</h2></div>
+      <div class="card">
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="fg"><label>Mensalista</label><select id="msg-pessoa" onchange="gerarMsg()"></select></div>
+          <div class="fg"><label>Tipo</label>
+            <select id="msg-tipo" onchange="gerarMsg()">
+              <option value="vencimento">Aviso de vencimento</option>
+              <option value="atraso">Cobrança de atraso</option>
+              <option value="boas_vindas">Boas-vindas</option>
+              <option value="renovacao">Renovação de plano</option>
+              <option value="resgate">Resgate de cliente</option>
+            </select>
+          </div>
+        </div>
+        <div id="msg-out"></div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIO -->
+    <div id="page-relatorio" class="page">
+      <div class="topbar"><h2>Relatório financeiro</h2></div>
+      <div class="periodo-row">
+        <label>Período:</label>
+        <input type="date" id="rel-de" onchange="renderRelatorio()">
+        <span>até</span>
+        <input type="date" id="rel-ate" onchange="renderRelatorio()">
+        <button class="btn btn-sm" onclick="setPeriodo('mes')">Este mês</button>
+        <button class="btn btn-sm" onclick="setPeriodo('trim')">Trimestre</button>
+        <button class="btn btn-sm" onclick="setPeriodo('ano')">Este ano</button>
+      </div>
+      <div class="metrics" id="rel-metrics"></div>
+      <div class="card"><div class="card-title">Receita por plano</div><div id="rel-planos"></div></div>
+      <div class="card"><div class="card-title">Resumo de comandas</div><div id="rel-cmd"></div></div>
+      <div class="card"><div class="card-title">Inadimplência</div><div id="rel-inad"></div></div>
+    </div>
+
+    <!-- PLANOS -->
+    <div id="page-planos" class="page">
+      <div class="topbar"><h2>Planos</h2><button class="btn btn-primary" onclick="abrirModalPlano()"><i class="ti ti-plus"></i>Novo plano</button></div>
+      <div id="lista-planos"></div>
+    </div>
+
+    <!-- PRODUTOS -->
+    <div id="page-produtos" class="page">
+      <div class="topbar"><h2>Produtos</h2>
+        <div class="topbar-right">
+          <button class="btn" onclick="abrirModalCat()"><i class="ti ti-folder-plus"></i>Nova categoria</button>
+          <button class="btn btn-primary" onclick="abrirModalProd()"><i class="ti ti-plus"></i>Novo produto</button>
+        </div>
+      </div>
+      <div id="lista-produtos"></div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div id="page-usuarios" class="page">
+      <div class="topbar"><h2>Usuários</h2><button class="btn btn-primary" onclick="abrirModalUser()"><i class="ti ti-plus"></i>Novo usuário</button></div>
+      <div id="lista-usuarios"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAIS -->
+<div id="modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
+
+  <div class="modal" id="modal-mens">
+    <div class="modal-title" id="modal-mens-title">Novo mensalista</div>
+    <div class="foto-area" onclick="document.getElementById('foto-input').click()">
+      <div id="foto-preview"><i class="ti ti-camera"></i></div>
+      <span>Foto (opcional)</span>
+    </div>
+    <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
+    <div class="form-row">
+      <div class="fg"><label>Nome completo *</label><input id="f-nome" type="text"></div>
+      <div class="fg"><label>CPF</label><input id="f-cpf" type="text" placeholder="000.000.000-00"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Telefone</label><input id="f-tel" type="text"></div>
+      <div class="fg"><label>Email</label><input id="f-email" type="email"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMensalista()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-hist">
+    <div class="modal-title" id="modal-hist-title">Histórico de planos</div>
+    <div id="hist-content"></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="fecharModal()">Fechar</button></div>
+  </div>
+
+  <div class="modal" id="modal-novo-plano-mens">
+    <div class="modal-title" id="modal-npm-title">Adicionar plano</div>
+    <div class="fg"><label>Plano</label><select id="npm-plano" onchange="autoNpmVenc()"></select></div>
+    <div class="fg"><label>Valor (R$)</label><input id="npm-valor" type="number" min="0"></div>
+    <div class="form-row">
+      <div class="fg"><label>Início</label><input id="npm-inicio" type="date" onchange="autoNpmVenc()"></div>
+      <div class="fg"><label>Válido até</label><input id="npm-valido" type="date" readonly></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNovoPlanMens()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-plano">
+    <div class="modal-title" id="modal-plano-title">Novo plano</div>
+    <div class="fg"><label>Nome *</label><input id="fp-nome" type="text"></div>
+    <div class="form-row">
+      <div class="fg"><label>Valor mensal (R$)</label><input id="fp-valor" type="number" min="0"></div>
+      <div class="fg"><label>Duração (meses)</label><input id="fp-duracao" type="number" min="1"></div>
+    </div>
+    <div class="fg"><label>Descrição</label><input id="fp-desc" type="text"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPlano()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-prod">
+    <div class="modal-title" id="modal-prod-title">Novo produto</div>
+    <div class="fg"><label>Nome *</label><input id="pp-nome" type="text"></div>
+    <div class="form-row">
+      <div class="fg"><label>Preço (R$)</label><input id="pp-preco" type="number" min="0" step="0.01"></div>
+      <div class="fg"><label>Categoria</label><select id="pp-cat"></select></div>
+    </div>
+    <div class="fg"><label>Ícone</label><div class="icon-grid" id="icon-grid"></div></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProd()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-cat">
+    <div class="modal-title">Nova categoria</div>
+    <div class="fg"><label>Nome *</label><input id="cat-nome" type="text" placeholder="Ex: Suplementos"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCat()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-comanda">
+    <div class="modal-title">Nova comanda</div>
+    <div class="form-row">
+      <div class="fg"><label>Nome do cliente *</label><input id="fc-nome" type="text"></div>
+      <div class="fg"><label>Telefone</label><input id="fc-tel" type="text"></div>
+    </div>
+    <div class="fg"><label>Observação</label><input id="fc-obs" type="text" placeholder="Ex: Quadra 3"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarComanda()">Criar comanda</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-user">
+    <div class="modal-title" id="modal-user-title">Novo usuário</div>
+    <div class="form-row">
+      <div class="fg"><label>Nome *</label><input id="u-nome" type="text"></div>
+      <div class="fg"><label>Login *</label><input id="u-login" type="text"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Senha *</label><input id="u-senha" type="password"></div>
+      <div class="fg"><label>Perfil</label>
+        <select id="u-role"><option value="admin">Administrador</option><option value="atendente">Atendente</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUser()">Salvar</button>
+    </div>
+  </div>
+
+</div><!-- fim modal-overlay -->
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -695,3 +695,20 @@ async function renderMens() {
     : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
 }
 
+// bottom nav active state
+function updateBottomNav(page) {
+  document.querySelectorAll('.bn-item[data-page]').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.bn-item[data-page="${page}"]`);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.bn-drawer-item[data-page]').forEach(el => el.classList.remove('active'));
+  const dl = document.querySelector(`.bn-drawer-item[data-page="${page}"]`);
+  if (dl) dl.classList.add('active');
+}
+
+// patch navTo to also update bottom nav
+const _navToOrig = navTo;
+function navTo(page) {
+  closeDrawer();
+  _navToOrig(page);
+  updateBottomNav(page);
+}

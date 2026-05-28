@@ -2,8 +2,11 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DiPraia — Gestão de Arena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1c4587">
+  <title>DiPraia</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,9 +14,7 @@
 <!-- LOGIN -->
 <div id="loginPage" class="login-wrap">
   <div class="login-box">
-    <div class="login-logo">
-      <img src="logo.png" alt="DiPraia">
-    </div>
+    <div class="login-logo"><img src="logo.png" alt="DiPraia"></div>
     <h1 class="login-title">DiPraia</h1>
     <p class="login-sub">Gestão de arena</p>
     <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
@@ -25,40 +26,67 @@
 
 <!-- APP -->
 <div id="mainApp" class="app" style="display:none">
+
+  <!-- SIDEBAR (desktop) -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-img"><img src="logo.png" alt="DiPraia"></div>
-      <div class="logo-text">
-        <div class="logo-title">DiPraia</div>
-        <div class="logo-sub">Gestão de arena</div>
-      </div>
+      <div class="logo-text"><div class="logo-title">DiPraia</div><div class="logo-sub">Gestão de arena</div></div>
     </div>
     <nav>
       <div class="nav-section">Principal</div>
-      <div class="nav-item active" data-page="dashboard" data-role="admin"><span class="ni">📊</span>Dashboard</div>
-      <div class="nav-item" data-page="mensalistas" data-role="all"><span class="ni">👥</span>Mensalistas</div>
-      <div class="nav-item" data-page="comandas" data-role="all"><span class="ni">🧾</span>Comandas</div>
-      <div class="nav-item" data-page="alertas" data-role="admin"><span class="ni">🔔</span>Alertas</div>
+      <div class="nav-item" data-page="dashboard"   data-role="admin"><span class="ni">📊</span>Dashboard</div>
+      <div class="nav-item" data-page="mensalistas" data-role="all"  ><span class="ni">👥</span>Mensalistas</div>
+      <div class="nav-item" data-page="comandas"    data-role="all"  ><span class="ni">🧾</span>Comandas</div>
+      <div class="nav-item" data-page="alertas"     data-role="admin"><span class="ni">🔔</span>Alertas</div>
       <div class="nav-section nav-admin-only">Ferramentas</div>
-      <div class="nav-item" data-page="mensagens" data-role="admin"><span class="ni">💬</span>Mensagens</div>
-      <div class="nav-item" data-page="relatorio" data-role="admin"><span class="ni">📈</span>Relatório</div>
-      <div class="nav-item" data-page="planos" data-role="admin"><span class="ni">🏷️</span>Planos</div>
-      <div class="nav-item" data-page="produtos" data-role="admin"><span class="ni">🛒</span>Produtos</div>
-      <div class="nav-item" data-page="usuarios" data-role="admin"><span class="ni">🔐</span>Usuários</div>
+      <div class="nav-item" data-page="mensagens"   data-role="admin"><span class="ni">💬</span>Mensagens</div>
+      <div class="nav-item" data-page="relatorio"   data-role="admin"><span class="ni">📈</span>Relatório</div>
+      <div class="nav-item" data-page="planos"      data-role="admin"><span class="ni">🏷️</span>Planos</div>
+      <div class="nav-item" data-page="produtos"    data-role="admin"><span class="ni">🛒</span>Produtos</div>
+      <div class="nav-item" data-page="usuarios"    data-role="admin"><span class="ni">🔐</span>Usuários</div>
     </nav>
     <div class="nav-user">
       <div class="nav-user-name" id="nav-username"></div>
-      <div class="nav-user-bottom">
-        <div class="nav-user-role" id="nav-userrole"></div>
-        <button class="btn btn-sm" onclick="doLogout()" title="Sair">Sair</button>
-      </div>
+      <div class="nav-user-bottom" id="nav-user-bottom"></div>
     </div>
   </aside>
 
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bn-item" data-page="mensalistas" onclick="navTo('mensalistas')">
+      <span class="bn-icon">👥</span><span>Mensalistas</span>
+    </button>
+    <button class="bn-item" data-page="comandas" onclick="navTo('comandas')">
+      <span class="bn-icon">🧾</span><span>Comandas</span>
+    </button>
+    <button class="bn-item admin-only" data-page="alertas" onclick="navTo('alertas')">
+      <span class="bn-icon">🔔</span><span>Alertas</span>
+    </button>
+    <button class="bn-item bn-more admin-only" onclick="toggleDrawer()">
+      <span class="bn-icon">⋯</span><span>Mais</span>
+    </button>
+  </nav>
+
+  <!-- DRAWER (mobile more menu) -->
+  <div class="bn-drawer" id="bn-drawer" onclick="closeDrawer()">
+    <div class="bn-drawer-grid">
+      <div class="bn-drawer-item" data-page="dashboard"  onclick="navTo('dashboard')"><span class="bn-icon">📊</span>Dashboard</div>
+      <div class="bn-drawer-item" data-page="mensagens"  onclick="navTo('mensagens')"><span class="bn-icon">💬</span>Mensagens</div>
+      <div class="bn-drawer-item" data-page="relatorio"  onclick="navTo('relatorio')"><span class="bn-icon">📈</span>Relatório</div>
+      <div class="bn-drawer-item" data-page="planos"     onclick="navTo('planos')"><span class="bn-icon">🏷️</span>Planos</div>
+      <div class="bn-drawer-item" data-page="produtos"   onclick="navTo('produtos')"><span class="bn-icon">🛒</span>Produtos</div>
+      <div class="bn-drawer-item" data-page="usuarios"   onclick="navTo('usuarios')"><span class="bn-icon">🔐</span>Usuários</div>
+      <div class="bn-drawer-item" onclick="abrirModalSenha()"><span class="bn-icon">🔑</span>Senha</div>
+      <div class="bn-drawer-item" onclick="doLogout()"><span class="bn-icon">🚪</span>Sair</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
   <main class="main">
 
     <!-- DASHBOARD -->
-    <div id="page-dashboard" class="page active">
+    <div id="page-dashboard" class="page">
       <div class="topbar"><h2>Dashboard</h2><span id="dash-date" class="topbar-date"></span></div>
       <div class="metrics" id="metrics"></div>
       <div class="card"><div class="card-title">🧾 Comandas em aberto</div><div id="dash-cmds"></div></div>
@@ -78,19 +106,21 @@
       <div class="tab-row" id="tabs-mens">
         <div class="tab active" data-filter="todos">Todos</div>
         <div class="tab" data-filter="ativo">Ativos</div>
-        <div class="tab" data-filter="inadimplente">Inadimplentes</div>
+        <div class="tab" data-filter="inadimplente">Inadimp.</div>
         <div class="tab" data-filter="vencendo">Vencendo</div>
         <div class="tab" data-filter="sem_plano">Sem plano</div>
       </div>
+      <!-- Tabela desktop -->
       <div class="card card-table">
-        <table>
-          <thead><tr>
+        <div class="table-wrap">
+          <table><thead><tr>
             <th style="width:44px"></th>
-            <th>Nome</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="width:180px">Ações</th>
-          </tr></thead>
-          <tbody id="tb-mens"></tbody>
-        </table>
+            <th>Nome</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th>
+          </tr></thead><tbody id="tb-mens"></tbody></table>
+        </div>
       </div>
+      <!-- Cards mobile -->
+      <div class="mens-mobile-list" id="mens-mobile-list"></div>
     </div>
 
     <!-- COMANDAS -->
@@ -118,19 +148,17 @@
 
     <!-- MENSAGENS -->
     <div id="page-mensagens" class="page">
-      <div class="topbar"><h2>Mensagens prontas</h2></div>
+      <div class="topbar"><h2>Mensagens</h2></div>
       <div class="card">
-        <div class="form-row" style="margin-bottom:12px">
-          <div class="fg"><label>Mensalista</label><select id="msg-pessoa" onchange="gerarMsg()"></select></div>
-          <div class="fg"><label>Tipo</label>
-            <select id="msg-tipo" onchange="gerarMsg()">
-              <option value="vencimento">Aviso de vencimento</option>
-              <option value="atraso">Cobrança de atraso</option>
-              <option value="boas_vindas">Boas-vindas</option>
-              <option value="renovacao">Renovação de plano</option>
-              <option value="resgate">Resgate de cliente</option>
-            </select>
-          </div>
+        <div class="fg"><label>Mensalista</label><select id="msg-pessoa" onchange="gerarMsg()"></select></div>
+        <div class="fg"><label>Tipo</label>
+          <select id="msg-tipo" onchange="gerarMsg()">
+            <option value="vencimento">Aviso de vencimento</option>
+            <option value="atraso">Cobrança de atraso</option>
+            <option value="boas_vindas">Boas-vindas</option>
+            <option value="renovacao">Renovação de plano</option>
+            <option value="resgate">Resgate de cliente</option>
+          </select>
         </div>
         <div id="msg-out"></div>
       </div>
@@ -138,25 +166,23 @@
 
     <!-- RELATÓRIO -->
     <div id="page-relatorio" class="page">
-      <div class="topbar"><h2>Relatório financeiro</h2></div>
+      <div class="topbar"><h2>Relatório</h2></div>
       <div class="periodo-row">
-        <label>Período:</label>
-        <input type="date" id="rel-de" onchange="renderRelatorio()">
-        <span>até</span>
-        <input type="date" id="rel-ate" onchange="renderRelatorio()">
-        <button class="btn btn-sm" onclick="setPeriodo('mes')">Este mês</button>
-        <button class="btn btn-sm" onclick="setPeriodo('trim')">Trimestre</button>
-        <button class="btn btn-sm" onclick="setPeriodo('ano')">Este ano</button>
+        <label>De:</label><input type="date" id="rel-de" onchange="renderRelatorio()">
+        <label>Até:</label><input type="date" id="rel-ate" onchange="renderRelatorio()">
+        <button class="btn btn-sm" onclick="setPeriodo('mes')">Mês</button>
+        <button class="btn btn-sm" onclick="setPeriodo('trim')">Trim.</button>
+        <button class="btn btn-sm" onclick="setPeriodo('ano')">Ano</button>
       </div>
       <div class="metrics" id="rel-metrics"></div>
-      <div class="card"><div class="card-title">Receita por plano</div><div id="rel-planos"></div></div>
-      <div class="card"><div class="card-title">Resumo de comandas</div><div id="rel-cmd"></div></div>
+      <div class="card"><div class="card-title">Por plano</div><div id="rel-planos"></div></div>
+      <div class="card"><div class="card-title">Comandas</div><div id="rel-cmd"></div></div>
       <div class="card"><div class="card-title">Inadimplência</div><div id="rel-inad"></div></div>
     </div>
 
     <!-- PLANOS -->
     <div id="page-planos" class="page">
-      <div class="topbar"><h2>Planos</h2><button class="btn btn-primary" onclick="abrirModalPlano()">+ Novo plano</button></div>
+      <div class="topbar"><h2>Planos</h2><button class="btn btn-primary" onclick="abrirModalPlano()">+ Novo</button></div>
       <div id="lista-planos"></div>
     </div>
 
@@ -164,8 +190,8 @@
     <div id="page-produtos" class="page">
       <div class="topbar"><h2>Produtos</h2>
         <div class="topbar-right">
-          <button class="btn" onclick="abrirModalCat()">+ Nova categoria</button>
-          <button class="btn btn-primary" onclick="abrirModalProd()">+ Novo produto</button>
+          <button class="btn btn-sm" onclick="abrirModalCat()">+ Categoria</button>
+          <button class="btn btn-primary" onclick="abrirModalProd()">+ Produto</button>
         </div>
       </div>
       <div id="lista-produtos"></div>
@@ -173,21 +199,21 @@
 
     <!-- USUÁRIOS -->
     <div id="page-usuarios" class="page">
-      <div class="topbar"><h2>Usuários</h2><button class="btn btn-primary" onclick="abrirModalUser()">+ Novo usuário</button></div>
+      <div class="topbar"><h2>Usuários</h2><button class="btn btn-primary" onclick="abrirModalUser()">+ Novo</button></div>
       <div id="lista-usuarios"></div>
     </div>
 
   </main>
 </div>
 
-<!-- MODAL OVERLAY -->
+<!-- MODAIS -->
 <div id="modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
 
   <div class="modal" id="modal-mens">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modal-mens-title">Novo mensalista</div>
     <div class="foto-area" onclick="document.getElementById('foto-input').click()">
-      <div id="foto-preview">📷</div>
-      <span>Foto (opcional)</span>
+      <div id="foto-preview">📷</div><span>Foto (opcional)</span>
     </div>
     <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
     <div class="form-row">
@@ -195,7 +221,7 @@
       <div class="fg"><label>CPF</label><input id="f-cpf" type="text" placeholder="000.000.000-00"></div>
     </div>
     <div class="form-row">
-      <div class="fg"><label>Telefone</label><input id="f-tel" type="text"></div>
+      <div class="fg"><label>Telefone</label><input id="f-tel" type="tel"></div>
       <div class="fg"><label>Email</label><input id="f-email" type="email"></div>
     </div>
     <div class="modal-footer">
@@ -205,15 +231,17 @@
   </div>
 
   <div class="modal" id="modal-hist">
-    <div class="modal-title" id="modal-hist-title">Histórico de planos</div>
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-hist-title">Histórico</div>
     <div id="hist-content"></div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="fecharModal()">Fechar</button></div>
   </div>
 
   <div class="modal" id="modal-novo-plano-mens">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modal-npm-title">Adicionar plano</div>
     <div class="fg"><label>Plano</label><select id="npm-plano" onchange="autoNpmVenc()"></select></div>
-    <div class="fg"><label>Valor (R$)</label><input id="npm-valor" type="number" min="0"></div>
+    <div class="fg"><label>Valor (R$)</label><input id="npm-valor" type="number" min="0" inputmode="decimal"></div>
     <div class="form-row">
       <div class="fg"><label>Início</label><input id="npm-inicio" type="date" onchange="autoNpmVenc()"></div>
       <div class="fg"><label>Válido até</label><input id="npm-valido" type="date" readonly></div>
@@ -225,11 +253,12 @@
   </div>
 
   <div class="modal" id="modal-plano">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modal-plano-title">Novo plano</div>
     <div class="fg"><label>Nome *</label><input id="fp-nome" type="text"></div>
     <div class="form-row">
-      <div class="fg"><label>Valor mensal (R$)</label><input id="fp-valor" type="number" min="0"></div>
-      <div class="fg"><label>Duração (meses)</label><input id="fp-duracao" type="number" min="1"></div>
+      <div class="fg"><label>Valor/mês (R$)</label><input id="fp-valor" type="number" min="0" inputmode="decimal"></div>
+      <div class="fg"><label>Duração (meses)</label><input id="fp-duracao" type="number" min="1" inputmode="numeric"></div>
     </div>
     <div class="fg"><label>Descrição</label><input id="fp-desc" type="text"></div>
     <div class="modal-footer">
@@ -239,10 +268,11 @@
   </div>
 
   <div class="modal" id="modal-prod">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modal-prod-title">Novo produto</div>
     <div class="fg"><label>Nome *</label><input id="pp-nome" type="text"></div>
     <div class="form-row">
-      <div class="fg"><label>Preço (R$)</label><input id="pp-preco" type="number" min="0" step="0.01"></div>
+      <div class="fg"><label>Preço (R$)</label><input id="pp-preco" type="number" min="0" step="0.01" inputmode="decimal"></div>
       <div class="fg"><label>Categoria</label><select id="pp-cat"></select></div>
     </div>
     <div class="fg"><label>Ícone</label><div class="icon-grid" id="icon-grid"></div></div>
@@ -253,8 +283,9 @@
   </div>
 
   <div class="modal" id="modal-cat">
+    <div class="modal-handle"></div>
     <div class="modal-title">Nova categoria</div>
-    <div class="fg"><label>Nome *</label><input id="cat-nome" type="text" placeholder="Ex: Suplementos"></div>
+    <div class="fg"><label>Nome *</label><input id="cat-nome" type="text"></div>
     <div class="modal-footer">
       <button class="btn" onclick="fecharModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarCat()">Salvar</button>
@@ -262,26 +293,26 @@
   </div>
 
   <div class="modal" id="modal-comanda">
+    <div class="modal-handle"></div>
     <div class="modal-title">Nova comanda</div>
-    <div class="form-row">
-      <div class="fg"><label>Nome do cliente *</label><input id="fc-nome" type="text"></div>
-      <div class="fg"><label>Telefone</label><input id="fc-tel" type="text"></div>
-    </div>
+    <div class="fg"><label>Nome do cliente *</label><input id="fc-nome" type="text"></div>
+    <div class="fg"><label>Telefone</label><input id="fc-tel" type="tel"></div>
     <div class="fg"><label>Observação</label><input id="fc-obs" type="text" placeholder="Ex: Quadra 3"></div>
     <div class="modal-footer">
       <button class="btn" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarComanda()">Criar comanda</button>
+      <button class="btn btn-primary" onclick="salvarComanda()">Criar</button>
     </div>
   </div>
 
   <div class="modal" id="modal-user">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modal-user-title">Novo usuário</div>
     <div class="form-row">
       <div class="fg"><label>Nome *</label><input id="u-nome" type="text"></div>
-      <div class="fg"><label>Login *</label><input id="u-login" type="text"></div>
+      <div class="fg"><label>Login *</label><input id="u-login" type="text" autocomplete="off"></div>
     </div>
     <div class="form-row">
-      <div class="fg"><label>Senha *</label><input id="u-senha" type="password"></div>
+      <div class="fg"><label>Senha *</label><input id="u-senha" type="password" autocomplete="new-password"></div>
       <div class="fg"><label>Perfil</label>
         <select id="u-role"><option value="admin">Administrador</option><option value="atendente">Atendente</option></select>
       </div>
@@ -293,13 +324,14 @@
   </div>
 
   <div class="modal" id="modal-senha">
-    <div class="modal-title">Alterar minha senha</div>
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 Alterar senha</div>
     <div class="fg"><label>Senha atual</label><input id="s-atual" type="password"></div>
     <div class="fg"><label>Nova senha *</label><input id="s-nova" type="password"></div>
     <div class="fg"><label>Confirmar nova senha *</label><input id="s-conf" type="password"></div>
     <div class="modal-footer">
       <button class="btn" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarSenha()">Alterar senha</button>
+      <button class="btn btn-primary" onclick="salvarSenha()">Alterar</button>
     </div>
   </div>
 

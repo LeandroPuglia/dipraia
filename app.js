@@ -623,3 +623,92 @@ document.querySelectorAll('#tabs-cmd .tab').forEach(el=>el.addEventListener('cli
 document.querySelectorAll('#tabs-alert .tab').forEach(el=>el.addEventListener('click',()=>{filterAlert=el.dataset.afilter;document.querySelectorAll('#tabs-alert .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderAlertas();}));
 document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete'))document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('show'));});
+
+// ── mobile helpers ────────────────────────────────────────────
+function toggleDrawer() {
+  const d = document.getElementById('bn-drawer');
+  d.classList.toggle('open');
+}
+function closeDrawer() {
+  document.getElementById('bn-drawer').classList.remove('open');
+}
+
+// sobrescreve renderMens para incluir versão mobile
+const _renderMensOrig = renderMens;
+async function renderMens() {
+  document.getElementById('tb-mens').innerHTML = '<tr><td colspan="7" class="loading">Carregando...</td></tr>';
+  if (document.getElementById('mens-mobile-list'))
+    document.getElementById('mens-mobile-list').innerHTML = '<div class="loading">Carregando...</div>';
+
+  const { data: mens } = await db.from('mensalistas').select('*').order('nome');
+  let lista = mens || [];
+  const q = document.getElementById('mens-search').value.toLowerCase();
+  if (q) lista = lista.filter(m => m.nome.toLowerCase().includes(q));
+  if (filterMens === 'ativo')        lista = lista.filter(m => calcStatus(m) === 'ativo');
+  if (filterMens === 'inadimplente') lista = lista.filter(m => calcStatus(m) === 'inadimplente');
+  if (filterMens === 'vencendo')     lista = lista.filter(m => calcStatus(m) === 'vencendo');
+  if (filterMens === 'sem_plano')    lista = lista.filter(m => calcStatus(m) === 'sem_plano');
+
+  // tabela desktop
+  document.getElementById('tb-mens').innerHTML = lista.length
+    ? lista.map(m => `<tr>
+        <td><div class="mens-avatar">${m.foto_url ? `<img src="${m.foto_url}" alt="">` : initials(m.nome)}</div></td>
+        <td><strong>${m.nome}</strong></td>
+        <td>${m.plano_atual || '—'}</td>
+        <td>${fmtDate(m.fim_plano)}</td>
+        <td>${m.valor_plano ? fmtR0(m.valor_plano) : '—'}</td>
+        <td>${statusBadge(m)}</td>
+        <td><div class="action-btns">
+          <button class="btn btn-sm" onclick="editarMens(${m.id})" title="Editar">✏️</button>
+          <button class="btn btn-sm" onclick="adicionarNovoPlano(${m.id})" title="Plano">📋</button>
+          <button class="btn btn-sm" onclick="verHistorico(${m.id})" title="Histórico">📜</button>
+          ${calcStatus(m) !== 'sem_plano' ? `<button class="btn btn-sm btn-warn" onclick="encerrarPlano(${m.id})" title="Encerrar">⏹️</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="excluirMens(${m.id})" title="Excluir">🗑️</button>
+        </div></td>
+      </tr>`).join('')
+    : `<tr><td colspan="7" class="empty">Nenhum encontrado</td></tr>`;
+
+  // cards mobile
+  const mbl = document.getElementById('mens-mobile-list');
+  if (!mbl) return;
+  mbl.innerHTML = lista.length
+    ? lista.map(m => `
+      <div class="mens-card">
+        <div class="mens-card-top">
+          <div class="mens-avatar" style="width:44px;height:44px;font-size:14px">${m.foto_url ? `<img src="${m.foto_url}" alt="">` : initials(m.nome)}</div>
+          <div class="mens-card-info">
+            <div class="mens-card-nome">${m.nome}</div>
+            <div class="mens-card-plano">${m.plano_atual || 'Sem plano'}</div>
+          </div>
+          ${statusBadge(m)}
+        </div>
+        <div class="mens-card-row"><span>Vencimento</span><span>${fmtDate(m.fim_plano)}</span></div>
+        <div class="mens-card-row"><span>Valor</span><span>${m.valor_plano ? fmtR0(m.valor_plano) + '/mês' : '—'}</span></div>
+        <div class="mens-card-actions">
+          <button class="btn btn-sm" onclick="editarMens(${m.id})">✏️ Editar</button>
+          <button class="btn btn-sm" onclick="adicionarNovoPlano(${m.id})">📋 Plano</button>
+          <button class="btn btn-sm" onclick="verHistorico(${m.id})">📜 Histórico</button>
+          ${calcStatus(m) !== 'sem_plano' ? `<button class="btn btn-sm btn-warn" onclick="encerrarPlano(${m.id})">⏹️ Encerrar</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="excluirMens(${m.id})">🗑️</button>
+        </div>
+      </div>`).join('')
+    : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
+}
+
+// bottom nav active state
+function updateBottomNav(page) {
+  document.querySelectorAll('.bn-item[data-page]').forEach(el => el.classList.remove('active'));
+  const el = document.querySelector(`.bn-item[data-page="${page}"]`);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.bn-drawer-item[data-page]').forEach(el => el.classList.remove('active'));
+  const dl = document.querySelector(`.bn-drawer-item[data-page="${page}"]`);
+  if (dl) dl.classList.add('active');
+}
+
+// patch navTo to also update bottom nav
+const _navToOrig = navTo;
+function navTo(page) {
+  closeDrawer();
+  _navToOrig(page);
+  updateBottomNav(page);
+}

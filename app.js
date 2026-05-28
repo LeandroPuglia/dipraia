@@ -3,7 +3,10 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── estado ───────────────────────────────────────────────────
-let currentUser = null;
+let localStorage.removeItem('dipraia_current_user');
+  localStorage.removeItem('dipraia_last_activity');
+
+  currentUser = null;
 let filterMens  = 'todos', filterCmd = 'abertas', filterAlert = 'todos';
 let editingMens = null, editingPlano = null, editingProd = null, editingUser = null, novoPlanoMensId = null;
 let selectedIcon = '💧';
@@ -69,9 +72,16 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
   currentUser = data;
-localStorage.setItem('dipraia_current_user', JSON.stringify(currentUser));
-localStorage.setItem('dipraia_last_activity', Date.now().toString());
 
+  localStorage.setItem(
+    'dipraia_current_user',
+    JSON.stringify(data)
+  );
+
+  localStorage.setItem(
+    'dipraia_last_activity',
+    Date.now().toString()
+  );
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('nav-username').textContent = data.nome;
@@ -95,10 +105,9 @@ function renderNavUser() {
 }
 
 
-function doLogout(){
-
-localStorage.removeItem('dipraia_current_user');
-localStorage.removeItem('dipraia_last_activity');
+function doLogout() {
+  localStorage.removeItem('dipraia_current_user');
+  localStorage.removeItem('dipraia_last_activity');
 
   currentUser = null;
   document.getElementById('mainApp').style.display = 'none';
@@ -708,57 +717,67 @@ async function renderMens() {
 
 
 
-/* ===== RESTAURA LOGIN AUTOMATICAMENTE ===== */
+/* =====================================================
+   SESSÃO PERSISTENTE
+===================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+function restaurarSessaoDipraia() {
 
   try {
 
-    const savedUser = localStorage.getItem('dipraia_current_user');
+    const saved =
+      localStorage.getItem('dipraia_current_user');
 
-    if (!savedUser) return;
+    if (!saved) return;
 
-    currentUser = JSON.parse(savedUser);
+    currentUser = JSON.parse(saved);
 
-    // esconde login
-    const loginScreen =
-      document.getElementById('login-screen') ||
-      document.getElementById('loginPage') ||
-      document.querySelector('.login-screen');
+    const loginPage =
+      document.getElementById('loginPage');
 
-    if (loginScreen) {
-      loginScreen.style.display = 'none';
+    const mainApp =
+      document.getElementById('mainApp');
+
+    if (loginPage) {
+      loginPage.style.display = 'none';
     }
 
-    // mostra dashboard
-    const dashboard =
-      document.getElementById('dashboard') ||
-      document.getElementById('app') ||
-      document.querySelector('.dashboard');
-
-    if (dashboard) {
-      dashboard.style.display = '';
+    if (mainApp) {
+      mainApp.style.display = 'flex';
     }
 
-    // renderiza usuário
-    if (typeof renderNavUser === 'function') {
-      renderNavUser();
+    const navUser =
+      document.getElementById('nav-username');
+
+    if (navUser) {
+      navUser.textContent = currentUser.nome || '';
+    }
+
+    const navRole =
+      document.getElementById('nav-userrole');
+
+    if (navRole) {
+      navRole.textContent =
+        currentUser.role === 'admin'
+          ? 'Administrador'
+          : 'Atendente';
+    }
+
+    if (typeof applyRole === 'function') {
+      applyRole();
     }
 
   } catch(e) {
     console.error(e);
     localStorage.removeItem('dipraia_current_user');
   }
+}
 
-});
-
-
-
-/* ===== CONTROLE DE INATIVIDADE ===== */
-
-const DIPRAIA_IDLE_TIMEOUT = 30 * 60 * 1000;
+const DIPRAIA_TIMEOUT =
+  30 * 60 * 1000;
 
 function renovarSessaoDipraia() {
+
   if (!currentUser) return;
 
   localStorage.setItem(
@@ -767,7 +786,7 @@ function renovarSessaoDipraia() {
   );
 }
 
-function verificarInatividadeDipraia() {
+function verificarSessaoDipraia() {
 
   if (!currentUser) return;
 
@@ -780,18 +799,11 @@ function verificarInatividadeDipraia() {
 
   const agora = Date.now();
 
-  if ((agora - last) > DIPRAIA_IDLE_TIMEOUT) {
+  if ((agora - last) > DIPRAIA_TIMEOUT) {
 
     alert('Sessão encerrada por inatividade.');
 
-    localStorage.removeItem('dipraia_current_user');
-    localStorage.removeItem('dipraia_last_activity');
-
-    if (typeof doLogout === 'function') {
-      doLogout();
-    } else {
-      location.reload();
-    }
+    doLogout();
   }
 }
 
@@ -804,5 +816,10 @@ function verificarInatividadeDipraia() {
   );
 });
 
-setInterval(verificarInatividadeDipraia, 60000);
+setInterval(verificarSessaoDipraia, 60000);
+
+document.addEventListener(
+  'DOMContentLoaded',
+  restaurarSessaoDipraia
+);
 

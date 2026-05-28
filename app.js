@@ -165,16 +165,16 @@ async function renderDash() {
     <div class="metric"><div class="metric-label">Comandas abertas</div><div class="metric-value">${cmdAb.length}</div></div>
     <div class="metric"><div class="metric-label">Total em aberto</div><div class="metric-value blue">${fmtR0(totCmd)}</div></div>`;
   document.getElementById('dash-cmds').innerHTML = cmdAb.length
-    ? `<table><thead><tr><th>Cliente</th><th>Itens</th><th>Abertura</th><th>Total</th></tr></thead><tbody>`
-      + cmdAb.map(x => { const t=(x.comanda_itens||[]).reduce((a,i)=>a+i.preco_unitario*i.quantidade,0); return `<tr><td>${x.cliente_nome}</td><td>${(x.comanda_itens||[]).reduce((a,i)=>a+i.quantidade,0)}</td><td>${fmtDT(x.aberta_em)}</td><td style="color:var(--green);font-weight:600">${fmtR(t)}</td></tr>`; }).join('') + `</tbody></table>`
+    ? `<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Itens</th><th>Abertura</th><th>Total</th></tr></thead><tbody>`
+      + cmdAb.map(x => { const t=(x.comanda_itens||[]).reduce((a,i)=>a+i.preco_unitario*i.quantidade,0); return `<tr><td>${x.cliente_nome}</td><td>${(x.comanda_itens||[]).reduce((a,i)=>a+i.quantidade,0)}</td><td>${fmtDT(x.aberta_em)}</td><td style="color:var(--green);font-weight:600">${fmtR(t)}</td></tr>`; }).join('') + `</tbody></table></div>`
     : `<div class="empty"><span class="empty-icon">✅</span>Nenhuma comanda aberta</div>`;
   const vl = m.filter(x => calcStatus(x) === 'vencendo');
   document.getElementById('dash-venc').innerHTML = vl.length
-    ? `<table><thead><tr><th>Nome</th><th>Plano</th><th>Dias</th><th>Valor</th></tr></thead><tbody>` + vl.map(x=>`<tr><td>${x.nome}</td><td>${x.plano_atual}</td><td>${diasAte(x.fim_plano)}d</td><td>${fmtR0(x.valor_plano)}</td></tr>`).join('') + `</tbody></table>`
+    ? `<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Plano</th><th>Dias</th><th>Valor</th></tr></thead><tbody>` + vl.map(x=>`<tr><td>${x.nome}</td><td>${x.plano_atual}</td><td>${diasAte(x.fim_plano)}d</td><td>${fmtR0(x.valor_plano)}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty"><span class="empty-icon">✅</span>Nenhum vencimento em 7 dias</div>`;
   const il = m.filter(x => calcStatus(x) === 'inadimplente');
   document.getElementById('dash-inad').innerHTML = il.length
-    ? `<table><thead><tr><th>Nome</th><th>Plano</th><th>Venceu</th><th>Valor</th></tr></thead><tbody>` + il.map(x=>`<tr><td>${x.nome}</td><td>${x.plano_atual}</td><td style="color:var(--red)">${fmtDate(x.fim_plano)}</td><td>${fmtR0(x.valor_plano)}</td></tr>`).join('') + `</tbody></table>`
+    ? `<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Plano</th><th>Venceu</th><th>Valor</th></tr></thead><tbody>` + il.map(x=>`<tr><td>${x.nome}</td><td>${x.plano_atual}</td><td style="color:var(--red)">${fmtDate(x.fim_plano)}</td><td>${fmtR0(x.valor_plano)}</td></tr>`).join('') + `</tbody></table></div>`
     : `<div class="empty"><span class="empty-icon">✅</span>Nenhum inadimplente</div>`;
 }
 

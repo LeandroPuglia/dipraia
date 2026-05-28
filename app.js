@@ -3,10 +3,7 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── estado ───────────────────────────────────────────────────
-let localStorage.removeItem('dipraia_current_user');
-  localStorage.removeItem('dipraia_last_activity');
-
-  currentUser = null;
+let currentUser = null;
 let filterMens  = 'todos', filterCmd = 'abertas', filterAlert = 'todos';
 let editingMens = null, editingPlano = null, editingProd = null, editingUser = null, novoPlanoMensId = null;
 let selectedIcon = '💧';
@@ -72,16 +69,6 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
   currentUser = data;
-
-  localStorage.setItem(
-    'dipraia_current_user',
-    JSON.stringify(data)
-  );
-
-  localStorage.setItem(
-    'dipraia_last_activity',
-    Date.now().toString()
-  );
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('nav-username').textContent = data.nome;
@@ -106,9 +93,6 @@ function renderNavUser() {
 
 
 function doLogout() {
-  localStorage.removeItem('dipraia_current_user');
-  localStorage.removeItem('dipraia_last_activity');
-
   currentUser = null;
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -714,112 +698,4 @@ async function renderMens() {
       </div>`).join('')
     : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
 }
-
-
-
-/* =====================================================
-   SESSÃO PERSISTENTE
-===================================================== */
-
-function restaurarSessaoDipraia() {
-
-  try {
-
-    const saved =
-      localStorage.getItem('dipraia_current_user');
-
-    if (!saved) return;
-
-    currentUser = JSON.parse(saved);
-
-    const loginPage =
-      document.getElementById('loginPage');
-
-    const mainApp =
-      document.getElementById('mainApp');
-
-    if (loginPage) {
-      loginPage.style.display = 'none';
-    }
-
-    if (mainApp) {
-      mainApp.style.display = 'flex';
-    }
-
-    const navUser =
-      document.getElementById('nav-username');
-
-    if (navUser) {
-      navUser.textContent = currentUser.nome || '';
-    }
-
-    const navRole =
-      document.getElementById('nav-userrole');
-
-    if (navRole) {
-      navRole.textContent =
-        currentUser.role === 'admin'
-          ? 'Administrador'
-          : 'Atendente';
-    }
-
-    if (typeof applyRole === 'function') {
-      applyRole();
-    }
-
-  } catch(e) {
-    console.error(e);
-    localStorage.removeItem('dipraia_current_user');
-  }
-}
-
-const DIPRAIA_TIMEOUT =
-  30 * 60 * 1000;
-
-function renovarSessaoDipraia() {
-
-  if (!currentUser) return;
-
-  localStorage.setItem(
-    'dipraia_last_activity',
-    Date.now().toString()
-  );
-}
-
-function verificarSessaoDipraia() {
-
-  if (!currentUser) return;
-
-  const last = parseInt(
-    localStorage.getItem('dipraia_last_activity') || '0',
-    10
-  );
-
-  if (!last) return;
-
-  const agora = Date.now();
-
-  if ((agora - last) > DIPRAIA_TIMEOUT) {
-
-    alert('Sessão encerrada por inatividade.');
-
-    doLogout();
-  }
-}
-
-['click','mousemove','keydown','scroll','touchstart']
-.forEach(evt => {
-  document.addEventListener(
-    evt,
-    renovarSessaoDipraia,
-    true
-  );
-});
-
-setInterval(verificarSessaoDipraia, 60000);
-
-document.addEventListener(
-  'DOMContentLoaded',
-  restaurarSessaoDipraia
-);
 

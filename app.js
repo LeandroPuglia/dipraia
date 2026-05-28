@@ -24,6 +24,12 @@ const isoToday = () => today().toISOString().split('T')[0];
 const addMonths = (s, m) => { const d = new Date(pd(s)); d.setMonth(d.getMonth()+m); return d.toISOString().split('T')[0]; };
 const inRange  = (s, de, ate) => { if (!s) return false; const x = s.slice(0,10); return (!de||x>=de)&&(!ate||x<=ate); };
 
+// ── hash de senha (SHA-256 via Web Crypto) ────────────────────
+async function hashSenha(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 function toast(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show ' + type;
@@ -65,12 +71,31 @@ async function doLogin() {
   btn.disabled = true; btn.textContent = 'Entrando...';
   const l = document.getElementById('l-user').value.trim();
   const s = document.getElementById('l-pass').value;
-  const { data, error } = await db.from('usuarios').select('*').eq('login', l).eq('senha', s).single();
+  const hash = await hashSenha(s);
+
+  // Tenta com hash primeiro
+  let { data, error } = await db.from('usuarios').select('*').eq('login', l).eq('senha', hash).single();
+
+  // Fallback: senha ainda em texto puro (migração automática)
+  if (error || !data) {
+    const res = await db.from('usuarios').select('*').eq('login', l).eq('senha', s).single();
+    if (!res.error && res.data) {
+      // Migra para hash transparentemente
+      await db.from('usuarios').update({ senha: hash }).eq('id', res.data.id);
+      data = { ...res.data, senha: hash };
+      error = null;
+    }
+  }
+
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
-  localStorage.setItem('dipraia_user', JSON.stringify(data));
+
+  // Nunca guarda senha no storage
+  const userSafe = { ...data };
+  delete userSafe.senha;
+  localStorage.setItem('dipraia_user', JSON.stringify(userSafe));
   sessionStorage.setItem('dipraia_alive', '1');
-  applyLogin(data);
+  applyLogin(userSafe);
 }
 
 function applyLogin(data) {
@@ -78,7 +103,6 @@ function applyLogin(data) {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('nav-username').textContent = data.nome;
-  document.getElementById('nav-userrole').textContent = data.role === 'admin' ? 'Administrador' : 'Atendente';
   renderNavUser();
   applyRole();
   navTo(data.role === 'admin' ? 'dashboard' : 'mensalistas');
@@ -127,10 +151,17 @@ async function salvarSenha() {
   if (!nova || !conf) { toast('Preencha todos os campos', 'error'); return; }
   if (nova !== conf)  { toast('As senhas não conferem', 'error'); return; }
   if (nova.length < 4) { toast('Senha muito curta (mín. 4 caracteres)', 'error'); return; }
-  if (currentUser.senha && atual !== currentUser.senha) { toast('Senha atual incorreta', 'error'); return; }
-  const { error } = await db.from('usuarios').update({ senha: nova }).eq('id', currentUser.id);
+
+  // Verifica senha atual contra o banco (suporta hash e plaintext em migração)
+  const hashAtual = await hashSenha(atual);
+  const { data: u } = await db.from('usuarios').select('senha').eq('id', currentUser.id).single();
+  if (!u || (u.senha !== hashAtual && u.senha !== atual)) {
+    toast('Senha atual incorreta', 'error'); return;
+  }
+
+  const hashNova = await hashSenha(nova);
+  const { error } = await db.from('usuarios').update({ senha: hashNova }).eq('id', currentUser.id);
   if (error) { toast('Erro ao alterar senha', 'error'); return; }
-  currentUser.senha = nova;
   toast('Senha alterada com sucesso!', 'success');
   fecharModal();
 }
@@ -609,16 +640,18 @@ async function renderUsuarios(){
 }
 function abrirModalUser(id=null){
   editingUser=id;
-  if(id){db.from('usuarios').select('*').eq('id',id).single().then(({data:u})=>{if(!u)return;document.getElementById('modal-user-title').textContent='Editar usuário';document.getElementById('u-nome').value=u.nome;document.getElementById('u-login').value=u.login;document.getElementById('u-senha').value=u.senha;document.getElementById('u-role').value=u.role;});}
+  if(id){db.from('usuarios').select('*').eq('id',id).single().then(({data:u})=>{if(!u)return;document.getElementById('modal-user-title').textContent='Editar usuário';document.getElementById('u-nome').value=u.nome;document.getElementById('u-login').value=u.login;document.getElementById('u-senha').value='';document.getElementById('u-senha').placeholder='Nova senha (deixe vazio para manter)';document.getElementById('u-role').value=u.role;});}
   else{document.getElementById('modal-user-title').textContent='Novo usuário';['u-nome','u-login','u-senha'].forEach(x=>document.getElementById(x).value='');document.getElementById('u-role').value='atendente';}
   abrirModal('modal-user');
 }
 function editarUser(id){abrirModalUser(id);}
 async function salvarUser(){
-  const nome=document.getElementById('u-nome').value.trim(),login=document.getElementById('u-login').value.trim(),senha=document.getElementById('u-senha').value;
-  if(!nome||!login||!senha){toast('Preencha todos os campos','error');return;}
-  const obj={nome,login,senha,role:document.getElementById('u-role').value};
-  const{error}=editingUser?await db.from('usuarios').update(obj).eq('id',editingUser):await db.from('usuarios').insert(obj);
+  const nome=document.getElementById('u-nome').value.trim(),login=document.getElementById('u-login').value.trim(),senhaRaw=document.getElementById('u-senha').value;
+  if(!nome||!login){toast('Preencha todos os campos','error');return;}
+  if(!editingUser && !senhaRaw){toast('Informe a senha','error');return;}
+  const obj={nome,login,role:document.getElementById('u-role').value};
+  if(senhaRaw) obj.senha = await hashSenha(senhaRaw);
+  const{error}=editingUser?await db.from('usuarios').update(obj).eq('id',editingUser):await db.from('usuarios').insert({...obj,senha:obj.senha});
   if(error){toast(error.code==='23505'?'Login já existe':'Erro ao salvar','error');return;}
   toast('Usuário salvo!','success');fecharModal();renderUsuarios();
 }
@@ -742,11 +775,13 @@ function resetInactivityTimer() {
   // Se não existir (aba foi fechada/reaberta) → exige novo login.
   const alive = sessionStorage.getItem('dipraia_alive');
   const saved = localStorage.getItem('dipraia_user');
+  let user = null;
   if (alive && saved) {
-    try {
-      const user = JSON.parse(saved);
-      if (user && user.id) { applyLogin(user); return; }
-    } catch(e) {}
+    try { user = JSON.parse(saved); } catch(e) { /* JSON inválido */ }
+  }
+  if (user && user.id) {
+    applyLogin(user);
+    return;
   }
   // Sem sessão válida: garante tela de login visível
   localStorage.removeItem('dipraia_user');

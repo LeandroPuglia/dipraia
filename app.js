@@ -71,7 +71,7 @@ async function doLogin() {
   currentUser = data;
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
-  document.getElementById('nav-username').textContent = data.nome;
+  
   document.getElementById('nav-userrole').textContent = data.role === 'admin' ? 'Administrador' : 'Atendente';
   renderNavUser();
   applyRole();
@@ -79,13 +79,19 @@ async function doLogin() {
 }
 
 function renderNavUser() {
+  const username = document.getElementById('nav-username');
+  username.innerHTML = `
+    <span class="nav-user-title">${currentUser.nome}</span>
+    <span class="nav-user-inline-actions">
+      <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">🔑</button>
+      <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">Sair</button>
+    </span>
+  `;
+
   const box = document.querySelector('.nav-user-bottom');
   box.innerHTML = `
     <div class="nav-user-role" id="nav-userrole">${currentUser.role === 'admin' ? 'Administrador' : 'Atendente'}</div>
-    <div class="nav-user-actions">
-      <button class="btn btn-sm" onclick="abrirModalSenha()" title="Alterar senha">🔑</button>
-      <button class="btn btn-sm" onclick="doLogout()" title="Sair">Sair</button>
-    </div>`;
+  `;
 }
 
 function doLogout() {
@@ -695,20 +701,3 @@ async function renderMens() {
     : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
 }
 
-// bottom nav active state
-function updateBottomNav(page) {
-  document.querySelectorAll('.bn-item[data-page]').forEach(el => el.classList.remove('active'));
-  const el = document.querySelector(`.bn-item[data-page="${page}"]`);
-  if (el) el.classList.add('active');
-  document.querySelectorAll('.bn-drawer-item[data-page]').forEach(el => el.classList.remove('active'));
-  const dl = document.querySelector(`.bn-drawer-item[data-page="${page}"]`);
-  if (dl) dl.classList.add('active');
-}
-
-// patch navTo to also update bottom nav
-const _navToOrig = navTo;
-function navTo(page) {
-  closeDrawer();
-  _navToOrig(page);
-  updateBottomNav(page);
-}

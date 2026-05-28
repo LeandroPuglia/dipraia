@@ -47,7 +47,20 @@
       <div class="nav-item" data-page="usuarios"    data-role="admin"><span class="ni">🔐</span>Usuários</div>
     </nav>
     <div class="nav-user">
-      <div class="nav-user-name" id="nav-username"></div>
+      <div class="nav-user-top">
+        <div class="nav-user-name" id="nav-username"></div>
+
+        <div class="nav-user-actions-desktop">
+          <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">
+            🔑
+          </button>
+
+          <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">
+            Sair
+          </button>
+        </div>
+      </div>
+
       <div class="nav-user-bottom" id="nav-user-bottom"></div>
     </div>
   </aside>

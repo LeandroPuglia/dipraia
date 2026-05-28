@@ -327,31 +327,13 @@ tbody tr:hover td { background: var(--bg3); }
 }
 
 
-/* ===== usuário rodapé desktop ===== */
+/* ===== usuário desktop ===== */
 
-.nav-user-bottom{
-  padding:12px;
-  border-top:1px solid #ddd;
-}
-
-.nav-user-name-row{
+.nav-user-top{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:8px;
-}
-
-.nav-user-name{
-  font-weight:600;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.nav-user-role{
-  font-size:12px;
-  opacity:.75;
-  margin-top:4px;
 }
 
 .nav-user-actions-desktop{
@@ -364,5 +346,10 @@ tbody tr:hover td { background: var(--bg3); }
 .btn-inline{
   padding:4px 8px;
   min-width:auto;
-  font-size:12px;
+}
+
+.nav-user-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }

@@ -80,18 +80,20 @@ async function doLogin() {
 
 function renderNavUser() {
   const username = document.getElementById('nav-username');
-  username.innerHTML = `
-    <span class="nav-user-title">${currentUser.nome}</span>
-    <span class="nav-user-inline-actions">
-      <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">🔑</button>
-      <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">Sair</button>
-    </span>
-  `;
+  if (username) {
+    username.innerHTML = `
+      <span class="nav-user-title">${currentUser.nome || ''}</span>
+      <div class="nav-user-inline-actions">
+        <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">🔑</button>
+        <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">Sair</button>
+      </div>
+    `;
+  }
 
-  const box = document.querySelector('.nav-user-bottom');
-  box.innerHTML = `
-    <div class="nav-user-role" id="nav-userrole">${currentUser.role === 'admin' ? 'Administrador' : 'Atendente'}</div>
-  `;
+  const role = document.getElementById('nav-userrole');
+  if (role) {
+    role.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Atendente';
+  }
 }
 
 function doLogout() {

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DiPraia — Gestão de Arena</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,8 +12,7 @@
 <div id="loginPage" class="login-wrap">
   <div class="login-box">
     <div class="login-logo">
-      <img src="logo.png" alt="DiPraia" onerror="this.style.display='none'">
-      <i class="ti ti-tennis fallback-icon"></i>
+      <img src="logo.png" alt="DiPraia">
     </div>
     <h1 class="login-title">DiPraia</h1>
     <p class="login-sub">Gestão de arena</p>
@@ -27,38 +25,32 @@
 
 <!-- APP -->
 <div id="mainApp" class="app" style="display:none">
-
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-img">
-        <img src="logo.png" alt="DiPraia" onerror="this.style.display='none'">
-        <i class="ti ti-tennis fallback-icon-sm"></i>
-      </div>
+      <div class="logo-img"><img src="logo.png" alt="DiPraia"></div>
       <div class="logo-text">
         <div class="logo-title">DiPraia</div>
         <div class="logo-sub">Gestão de arena</div>
       </div>
     </div>
-
     <nav>
       <div class="nav-section">Principal</div>
-      <div class="nav-item active" data-page="dashboard" data-role="admin"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
-      <div class="nav-item" data-page="mensalistas" data-role="all"><i class="ti ti-users"></i>Mensalistas</div>
-      <div class="nav-item" data-page="comandas" data-role="all"><i class="ti ti-receipt"></i>Comandas</div>
-      <div class="nav-item" data-page="alertas" data-role="admin"><i class="ti ti-bell"></i>Alertas</div>
+      <div class="nav-item active" data-page="dashboard" data-role="admin"><span class="ni">📊</span>Dashboard</div>
+      <div class="nav-item" data-page="mensalistas" data-role="all"><span class="ni">👥</span>Mensalistas</div>
+      <div class="nav-item" data-page="comandas" data-role="all"><span class="ni">🧾</span>Comandas</div>
+      <div class="nav-item" data-page="alertas" data-role="admin"><span class="ni">🔔</span>Alertas</div>
       <div class="nav-section nav-admin-only">Ferramentas</div>
-      <div class="nav-item" data-page="mensagens" data-role="admin"><i class="ti ti-message"></i>Mensagens</div>
-      <div class="nav-item" data-page="relatorio" data-role="admin"><i class="ti ti-chart-bar"></i>Relatório</div>
-      <div class="nav-item" data-page="planos" data-role="admin"><i class="ti ti-tag"></i>Planos</div>
-      <div class="nav-item" data-page="produtos" data-role="admin"><i class="ti ti-shopping-cart"></i>Produtos</div>
-      <div class="nav-item" data-page="usuarios" data-role="admin"><i class="ti ti-shield"></i>Usuários</div>
+      <div class="nav-item" data-page="mensagens" data-role="admin"><span class="ni">💬</span>Mensagens</div>
+      <div class="nav-item" data-page="relatorio" data-role="admin"><span class="ni">📈</span>Relatório</div>
+      <div class="nav-item" data-page="planos" data-role="admin"><span class="ni">🏷️</span>Planos</div>
+      <div class="nav-item" data-page="produtos" data-role="admin"><span class="ni">🛒</span>Produtos</div>
+      <div class="nav-item" data-page="usuarios" data-role="admin"><span class="ni">🔐</span>Usuários</div>
     </nav>
-
     <div class="nav-user">
       <div class="nav-user-name" id="nav-username"></div>
       <div class="nav-user-bottom">
         <div class="nav-user-role" id="nav-userrole"></div>
-        <button class="btn btn-sm" onclick="doLogout()" title="Sair"><i class="ti ti-logout"></i></button>
+        <button class="btn btn-sm" onclick="doLogout()" title="Sair">Sair</button>
       </div>
     </div>
   </aside>
@@ -69,9 +61,9 @@
     <div id="page-dashboard" class="page active">
       <div class="topbar"><h2>Dashboard</h2><span id="dash-date" class="topbar-date"></span></div>
       <div class="metrics" id="metrics"></div>
-      <div class="card"><div class="card-title"><i class="ti ti-receipt"></i>Comandas em aberto</div><div id="dash-cmds"></div></div>
-      <div class="card"><div class="card-title"><i class="ti ti-clock"></i>Vencendo em 7 dias</div><div id="dash-venc"></div></div>
-      <div class="card"><div class="card-title"><i class="ti ti-alert-circle"></i>Inadimplentes</div><div id="dash-inad"></div></div>
+      <div class="card"><div class="card-title">🧾 Comandas em aberto</div><div id="dash-cmds"></div></div>
+      <div class="card"><div class="card-title">⏰ Vencendo em 7 dias</div><div id="dash-venc"></div></div>
+      <div class="card"><div class="card-title">⚠️ Inadimplentes</div><div id="dash-inad"></div></div>
     </div>
 
     <!-- MENSALISTAS -->
@@ -79,8 +71,8 @@
       <div class="topbar">
         <h2>Mensalistas</h2>
         <div class="topbar-right">
-          <div class="search-wrap"><i class="ti ti-search"></i><input id="mens-search" type="text" placeholder="Buscar nome..." oninput="renderMens()"></div>
-          <button class="btn btn-primary" onclick="abrirModalMens()"><i class="ti ti-plus"></i>Novo</button>
+          <div class="search-wrap"><span class="search-icon">🔍</span><input id="mens-search" type="text" placeholder="Buscar nome..." oninput="renderMens()"></div>
+          <button class="btn btn-primary" onclick="abrirModalMens()">+ Novo</button>
         </div>
       </div>
       <div class="tab-row" id="tabs-mens">
@@ -94,7 +86,7 @@
         <table>
           <thead><tr>
             <th style="width:44px"></th>
-            <th>Nome</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="width:60px">Ações</th>
+            <th>Nome</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="width:180px">Ações</th>
           </tr></thead>
           <tbody id="tb-mens"></tbody>
         </table>
@@ -103,7 +95,7 @@
 
     <!-- COMANDAS -->
     <div id="page-comandas" class="page">
-      <div class="topbar"><h2>Comandas</h2><button class="btn btn-primary" onclick="abrirModalComanda()"><i class="ti ti-plus"></i>Nova</button></div>
+      <div class="topbar"><h2>Comandas</h2><button class="btn btn-primary" onclick="abrirModalComanda()">+ Nova</button></div>
       <div class="tab-row" id="tabs-cmd">
         <div class="tab active" data-cfilter="abertas">Abertas</div>
         <div class="tab" data-cfilter="fechadas">Fechadas</div>
@@ -164,7 +156,7 @@
 
     <!-- PLANOS -->
     <div id="page-planos" class="page">
-      <div class="topbar"><h2>Planos</h2><button class="btn btn-primary" onclick="abrirModalPlano()"><i class="ti ti-plus"></i>Novo plano</button></div>
+      <div class="topbar"><h2>Planos</h2><button class="btn btn-primary" onclick="abrirModalPlano()">+ Novo plano</button></div>
       <div id="lista-planos"></div>
     </div>
 
@@ -172,8 +164,8 @@
     <div id="page-produtos" class="page">
       <div class="topbar"><h2>Produtos</h2>
         <div class="topbar-right">
-          <button class="btn" onclick="abrirModalCat()"><i class="ti ti-folder-plus"></i>Nova categoria</button>
-          <button class="btn btn-primary" onclick="abrirModalProd()"><i class="ti ti-plus"></i>Novo produto</button>
+          <button class="btn" onclick="abrirModalCat()">+ Nova categoria</button>
+          <button class="btn btn-primary" onclick="abrirModalProd()">+ Novo produto</button>
         </div>
       </div>
       <div id="lista-produtos"></div>
@@ -181,20 +173,20 @@
 
     <!-- USUÁRIOS -->
     <div id="page-usuarios" class="page">
-      <div class="topbar"><h2>Usuários</h2><button class="btn btn-primary" onclick="abrirModalUser()"><i class="ti ti-plus"></i>Novo usuário</button></div>
+      <div class="topbar"><h2>Usuários</h2><button class="btn btn-primary" onclick="abrirModalUser()">+ Novo usuário</button></div>
       <div id="lista-usuarios"></div>
     </div>
 
   </main>
 </div>
 
-<!-- MODAIS -->
+<!-- MODAL OVERLAY -->
 <div id="modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
 
   <div class="modal" id="modal-mens">
     <div class="modal-title" id="modal-mens-title">Novo mensalista</div>
     <div class="foto-area" onclick="document.getElementById('foto-input').click()">
-      <div id="foto-preview"><i class="ti ti-camera"></i></div>
+      <div id="foto-preview">📷</div>
       <span>Foto (opcional)</span>
     </div>
     <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
@@ -300,9 +292,19 @@
     </div>
   </div>
 
-</div><!-- fim modal-overlay -->
+  <div class="modal" id="modal-senha">
+    <div class="modal-title">Alterar minha senha</div>
+    <div class="fg"><label>Senha atual</label><input id="s-atual" type="password"></div>
+    <div class="fg"><label>Nova senha *</label><input id="s-nova" type="password"></div>
+    <div class="fg"><label>Confirmar nova senha *</label><input id="s-conf" type="password"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarSenha()">Alterar senha</button>
+    </div>
+  </div>
 
-<!-- Toast -->
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

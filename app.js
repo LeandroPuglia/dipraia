@@ -555,15 +555,17 @@ async function renderPlanos() {
     ?pl.map(p=>`<div class="plan-card ${p.arquivado?'archived':''}">
         <div class="picon">🏷️</div>
         <div class="plan-info"><div class="plan-name">${p.nome}${p.arquivado?' <span class="badge bgr">Arquivado</span>':''}</div><div class="plan-detail">${fmtR0(p.valor)}/mês · ${p.duracao_meses} ${p.duracao_meses===1?'mês':'meses'}${p.descricao?' · '+p.descricao:''}</div></div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${!p.arquivado?`<button class="btn btn-sm" onclick="editarPlano(${p.id})">✏️ Editar</button>`:''}
-          <button class="btn btn-sm ${p.arquivado?'':'btn-danger'}" onclick="${p.arquivado?`desarquivarPlano(${p.id})`:`arquivarPlano(${p.id})`}">${p.arquivado?'🔄 Reativar':'🗄️ Arquivar'}</button>
+          <button class="btn btn-sm ${p.arquivado?'':'btn-warn'}" onclick="${p.arquivado?`desarquivarPlano(${p.id})`:`arquivarPlano(${p.id})`}">${p.arquivado?'🔄 Reativar':'🗄️ Arquivar'}</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirPlano(${p.id})">🗑️ Excluir</button>
         </div>
       </div>`).join('')
     :`<div class="empty" style="padding:2rem">Nenhum plano cadastrado.</div>`;
 }
 async function arquivarPlano(id){if(!confirm('Arquivar este plano?'))return;await db.from('planos').update({arquivado:true}).eq('id',id);toast('Plano arquivado');renderPlanos();}
 async function desarquivarPlano(id){await db.from('planos').update({arquivado:false}).eq('id',id);toast('Plano reativado');renderPlanos();}
+async function excluirPlano(id){if(!confirm('Excluir este plano permanentemente?\n\nEsta ação não pode ser desfeita.'))return;const{error}=await db.from('planos').delete().eq('id',id);if(error){toast('Erro ao excluir plano','error');return;}toast('Plano excluído','success');renderPlanos();}
 function abrirModalPlano(id=null){
   editingPlano=id;
   if(id){db.from('planos').select('*').eq('id',id).single().then(({data:p})=>{if(!p)return;document.getElementById('modal-plano-title').textContent='Editar plano';document.getElementById('fp-nome').value=p.nome;document.getElementById('fp-valor').value=p.valor;document.getElementById('fp-duracao').value=p.duracao_meses;document.getElementById('fp-desc').value=p.descricao||'';});}
@@ -593,15 +595,17 @@ async function renderProdutos(){
       <div class="prod-card ${p.arquivado?'archived':''}">
         <div class="picon">${p.icone||'🛒'}</div>
         <div class="plan-info"><div class="plan-name">${p.nome}${p.arquivado?' <span class="badge bgr">Arquivado</span>':''}</div><div class="plan-detail">${fmtR(p.preco)} · ${p.categoria}</div></div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${!p.arquivado?`<button class="btn btn-sm" onclick="editarProd(${p.id})">✏️</button>`:''}
-          <button class="btn btn-sm ${p.arquivado?'':'btn-danger'}" onclick="${p.arquivado?`desarquivarProd(${p.id})`:`arquivarProd(${p.id})`}">${p.arquivado?'🔄':'🗄️'}</button>
+          <button class="btn btn-sm ${p.arquivado?'':'btn-warn'}" onclick="${p.arquivado?`desarquivarProd(${p.id})`:`arquivarProd(${p.id})`}">${p.arquivado?'🔄':'🗄️'}</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirProd(${p.id})">🗑️</button>
         </div>
       </div>`).join('');
   }).join('')||`<div class="empty" style="padding:2rem">Nenhum produto.</div>`;
 }
 async function arquivarProd(id){if(!confirm('Arquivar este produto?'))return;await db.from('produtos').update({arquivado:true}).eq('id',id);toast('Produto arquivado');renderProdutos();}
 async function desarquivarProd(id){await db.from('produtos').update({arquivado:false}).eq('id',id);toast('Produto reativado');renderProdutos();}
+async function excluirProd(id){if(!confirm('Excluir este produto permanentemente?\n\nEsta ação não pode ser desfeita.'))return;const{error}=await db.from('produtos').delete().eq('id',id);if(error){toast('Erro ao excluir produto','error');return;}toast('Produto excluído','success');renderProdutos();}
 async function abrirModalProd(id=null){
   editingProd=id;await fillCatSelect();
   if(id){const{data:p}=await db.from('produtos').select('*').eq('id',id).single();if(p){document.getElementById('modal-prod-title').textContent='Editar produto';document.getElementById('pp-nome').value=p.nome;document.getElementById('pp-preco').value=p.preco;document.getElementById('pp-cat').value=p.categoria;selectedIcon=p.icone||'🛒';}}
@@ -616,12 +620,58 @@ async function salvarProd(){
   if(error){toast('Erro ao salvar','error');return;}
   toast('Produto salvo!','success');fecharModal();renderProdutos();
 }
-function abrirModalCat(){document.getElementById('cat-nome').value='';abrirModal('modal-cat');}
+// ── gerenciar categorias ──────────────────────────────────────
+async function abrirGerenciarCats(){
+  abrirModal('modal-gerenciar-cats');
+  document.getElementById('cat-nome-new').value='';
+  await renderGerenciarCats();
+}
+async function renderGerenciarCats(){
+  const{data:cats}=await db.from('categorias').select('*').order('nome');
+  const lista=document.getElementById('lista-cats');
+  if(!lista)return;
+  lista.innerHTML=(cats||[]).length
+    ?(cats||[]).map(c=>`
+      <div id="cat-row-${c.id}" style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <span style="flex:1;font-size:13px">${c.nome}</span>
+        <button class="btn btn-sm" onclick="iniciarEditarCat(${c.id},'${c.nome.replace(/'/g,"\'")}')">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirCat(${c.id})">🗑️</button>
+      </div>`).join('')
+    :'<div class="empty" style="padding:1rem 0">Nenhuma categoria cadastrada.</div>';
+}
+function iniciarEditarCat(id, nomeAtual){
+  const row=document.getElementById('cat-row-'+id);
+  if(!row)return;
+  row.innerHTML=`
+    <input id="cat-edit-${id}" type="text" value="${nomeAtual}" style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;color:var(--text)">
+    <button class="btn btn-sm btn-primary" onclick="salvarEditarCat(${id})">✔</button>
+    <button class="btn btn-sm" onclick="renderGerenciarCats()">✕</button>`;
+}
+async function salvarEditarCat(id){
+  const input=document.getElementById('cat-edit-'+id);
+  const nome=input?input.value.trim():'';
+  if(!nome){toast('Informe o nome','error');return;}
+  const{error}=await db.from('categorias').update({nome}).eq('id',id);
+  if(error){toast(error.code==='23505'?'Nome já existe':'Erro ao salvar','error');return;}
+  toast('Categoria atualizada!','success');
+  await renderGerenciarCats();renderProdutos();
+}
+async function excluirCat(id){
+  if(!confirm('Excluir esta categoria?\n\nOs produtos vinculados ficarão sem categoria.'))return;
+  const{error}=await db.from('categorias').delete().eq('id',id);
+  if(error){toast('Erro ao excluir categoria','error');return;}
+  toast('Categoria excluída','success');
+  await renderGerenciarCats();renderProdutos();
+}
 async function salvarCat(){
-  const nome=document.getElementById('cat-nome').value.trim();if(!nome){toast('Informe o nome','error');return;}
+  const input=document.getElementById('cat-nome-new');
+  const nome=input?input.value.trim():'';
+  if(!nome){toast('Informe o nome','error');return;}
   const{error}=await db.from('categorias').insert({nome});
   if(error){toast(error.code==='23505'?'Categoria já existe':'Erro ao salvar','error');return;}
-  toast('Categoria criada!','success');fecharModal();renderProdutos();
+  toast('Categoria criada!','success');
+  if(input)input.value='';
+  await renderGerenciarCats();renderProdutos();
 }
 
 // ── usuários ──────────────────────────────────────────────────

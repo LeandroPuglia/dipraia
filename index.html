@@ -203,7 +203,7 @@
     <div id="page-produtos" class="page">
       <div class="topbar"><h2>Produtos</h2>
         <div class="topbar-right">
-          <button class="btn btn-sm" onclick="abrirModalCat()">+ Categoria</button>
+          <button class="btn btn-sm" onclick="abrirGerenciarCats()">📋 Categorias</button>
           <button class="btn btn-primary" onclick="abrirModalProd()">+ Produto</button>
         </div>
       </div>
@@ -295,13 +295,16 @@
     </div>
   </div>
 
-  <div class="modal" id="modal-cat">
+  <div class="modal" id="modal-gerenciar-cats">
     <div class="modal-handle"></div>
-    <div class="modal-title">Nova categoria</div>
-    <div class="fg"><label>Nome *</label><input id="cat-nome" type="text"></div>
+    <div class="modal-title">📋 Categorias</div>
+    <div id="lista-cats" style="margin-bottom:14px;max-height:280px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;align-items:center;padding-top:10px;border-top:1px solid var(--border)">
+      <input id="cat-nome-new" type="text" placeholder="Nome da nova categoria..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;color:var(--text)">
+      <button class="btn btn-primary" onclick="salvarCat()">+ Adicionar</button>
+    </div>
     <div class="modal-footer">
-      <button class="btn" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarCat()">Salvar</button>
+      <button class="btn btn-primary" onclick="fecharModal()">Fechar</button>
     </div>
   </div>
 

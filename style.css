@@ -21,11 +21,12 @@
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
 
 /* ── LOGIN ─────────────────────────────────────────────────── */
-.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--brand); padding: 16px; }
-.login-box { background: #fff; border-radius: var(--radius); padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+.login-wrap { min-height: 100vh; display: flex; flex-direction:column; align-items: center; justify-content: center; background:url("Novo Fundo.jpeg") center/cover no-repeat; padding: 16px; }
+.login-box { background: rgba(255,255,255,.96); border-radius: var(--radius); padding: 22px 20px; width: 100%; max-width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+.login-logo-top img{width:180px; margin-bottom:20px;}
 .login-logo { background: var(--brand); border-radius: var(--radius-sm); padding: 20px; text-align: center; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; min-height: 100px; }
 .login-logo img { max-height: 80px; max-width: 180px; object-fit: contain; }
-.login-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+.login-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 18px; }
 .login-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 18px; }
 .login-error { font-size: 12px; color: var(--red); background: #FCEBEB; border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 10px; display: none; }
 .btn-block { width: 100%; justify-content: center; margin-top: 6px; padding: 12px; font-size: 15px; }
@@ -35,9 +36,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ── SIDEBAR (desktop) ─────────────────────────────────────── */
 .sidebar { width: 210px; background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; transition: transform .25s; }
-.sidebar-logo { padding: 12px 14px; background: var(--brand); display: flex; align-items: center; gap: 10px; min-height: 62px; flex-shrink: 0; }
-.logo-img { width: 40px; height: 40px; border-radius: 6px; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
-.logo-img img { width: 36px; height: 36px; object-fit: contain; }
+.sidebar-logo { padding: 12px 14px; background: var(--brand); display: flex; align-items: center; gap: 10px; min-height: 74px; flex-shrink: 0; }
+.logo-img { width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.logo-img img { width: 56px; height: 56px; object-fit: contain; }
 .logo-text { color: #fff; }
 .logo-title { font-size: 15px; font-weight: 700; }
 .logo-sub { font-size: 10px; opacity: .8; margin-top: 1px; }
@@ -325,3 +326,7 @@ tbody tr:hover td { background: var(--bg3); }
   .modal-handle { display: none; }
   .item-time { display: inline; }
 }
+
+.desktop-actions{display:flex;gap:6px;}
+.mobile-topbar{display:none;}
+@media(max-width:768px){.mobile-topbar{position:fixed;top:0;left:0;right:0;height:50px;background:var(--brand);display:flex;align-items:center;padding:0 14px;z-index:500;color:#fff;font-weight:700;gap:10px}.mobile-topbar img{height:34px}.main{padding-top:58px}}

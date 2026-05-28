@@ -13,10 +13,8 @@
 
 <!-- LOGIN -->
 <div id="loginPage" class="login-wrap">
-  <div class="login-box">
-    <div class="login-logo"><img src="logo.png" alt="DiPraia"></div>
-    <h1 class="login-title">DiPraia</h1>
-    <p class="login-sub">Gestão de arena</p>
+  <div class="login-logo-top"><img src="Logotipo.PNG" alt="DiPraia"></div><div class="login-box">
+    <h1 class="login-title">DiPraia Gestão de Arena</h1>
     <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
     <div class="fg"><label>Usuário</label><input id="l-user" type="text" placeholder="seu.usuario" autocomplete="username"></div>
     <div class="fg"><label>Senha</label><input id="l-pass" type="password" placeholder="••••••" autocomplete="current-password"></div>
@@ -47,10 +45,11 @@
       <div class="nav-item" data-page="usuarios"    data-role="admin"><span class="ni">🔐</span>Usuários</div>
     </nav>
     <div class="nav-user">
-      <div class="nav-user-name" id="nav-username"></div>
-      <div class="nav-user-bottom" id="nav-user-bottom"></div>
+      <div class="nav-user-bottom"><div><div class="nav-user-name" id="nav-username"></div><div id="nav-user-bottom"></div></div><div class="desktop-actions"><button class="btn btn-sm" onclick="abrirModalSenha()">Senha</button><button class="btn btn-sm" onclick="doLogout()">Sair</button></div></div>
     </div>
   </aside>
+
+  <div class="mobile-topbar"><img src="Logotipo.PNG"><span>DiPraia</span></div>
 
   <!-- BOTTOM NAV (mobile) -->
   <nav class="bottom-nav" id="bottom-nav">

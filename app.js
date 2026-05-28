@@ -9,7 +9,7 @@ let editingMens = null, editingPlano = null, editingProd = null, editingUser = n
 let selectedIcon = '💧';
 let fotoDataUrl  = null;
 
-const PROD_ICONS = ['💧','🥤','🧃','🍺','🍹','⚡','🍪','🍫','🥟','🎾','🍶','👕','🏆','🏸','🍬','🎟'];
+const PROD_ICONS = ['💧','🥤','🧃','🍺','🍹','⚡','🍪','🍫','🥟','🎾','🍶','👕','🏆','🥎','🍬','🕹️'];
 
 // ── helpers ───────────────────────────────────────────────────
 const today  = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };

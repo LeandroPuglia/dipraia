@@ -69,8 +69,9 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
   currentUser = data;
-localStorage.setItem('currentUser', JSON.stringify(currentUser));
-atualizarAtividadeUsuario();
+localStorage.setItem('dipraia_current_user', JSON.stringify(currentUser));
+localStorage.setItem('dipraia_last_activity', Date.now().toString());
+
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('nav-username').textContent = data.nome;
@@ -95,8 +96,10 @@ function renderNavUser() {
 
 
 function doLogout(){
-localStorage.removeItem('currentUser');
-localStorage.removeItem('lastActivity');
+
+localStorage.removeItem('dipraia_current_user');
+localStorage.removeItem('dipraia_last_activity');
+
   currentUser = null;
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -705,64 +708,101 @@ async function renderMens() {
 
 
 
-/* ===== sessão persistente + timeout ===== */
+/* ===== RESTAURA LOGIN AUTOMATICAMENTE ===== */
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 min
+document.addEventListener('DOMContentLoaded', () => {
 
-function atualizarAtividadeUsuario() {
+  try {
+
+    const savedUser = localStorage.getItem('dipraia_current_user');
+
+    if (!savedUser) return;
+
+    currentUser = JSON.parse(savedUser);
+
+    // esconde login
+    const loginScreen =
+      document.getElementById('login-screen') ||
+      document.getElementById('loginPage') ||
+      document.querySelector('.login-screen');
+
+    if (loginScreen) {
+      loginScreen.style.display = 'none';
+    }
+
+    // mostra dashboard
+    const dashboard =
+      document.getElementById('dashboard') ||
+      document.getElementById('app') ||
+      document.querySelector('.dashboard');
+
+    if (dashboard) {
+      dashboard.style.display = '';
+    }
+
+    // renderiza usuário
+    if (typeof renderNavUser === 'function') {
+      renderNavUser();
+    }
+
+  } catch(e) {
+    console.error(e);
+    localStorage.removeItem('dipraia_current_user');
+  }
+
+});
+
+
+
+/* ===== CONTROLE DE INATIVIDADE ===== */
+
+const DIPRAIA_IDLE_TIMEOUT = 30 * 60 * 1000;
+
+function renovarSessaoDipraia() {
   if (!currentUser) return;
-  localStorage.setItem('lastActivity', Date.now().toString());
+
+  localStorage.setItem(
+    'dipraia_last_activity',
+    Date.now().toString()
+  );
 }
 
-function verificarSessaoExpirada() {
-  const last = parseInt(localStorage.getItem('lastActivity') || '0', 10);
+function verificarInatividadeDipraia() {
+
+  if (!currentUser) return;
+
+  const last = parseInt(
+    localStorage.getItem('dipraia_last_activity') || '0',
+    10
+  );
 
   if (!last) return;
 
   const agora = Date.now();
 
-  if ((agora - last) > SESSION_TIMEOUT) {
+  if ((agora - last) > DIPRAIA_IDLE_TIMEOUT) {
+
     alert('Sessão encerrada por inatividade.');
-    doLogout();
+
+    localStorage.removeItem('dipraia_current_user');
+    localStorage.removeItem('dipraia_last_activity');
+
+    if (typeof doLogout === 'function') {
+      doLogout();
+    } else {
+      location.reload();
+    }
   }
 }
 
-['click','mousemove','keydown','scroll','touchstart'].forEach(evt => {
-  document.addEventListener(evt, atualizarAtividadeUsuario, true);
+['click','mousemove','keydown','scroll','touchstart']
+.forEach(evt => {
+  document.addEventListener(
+    evt,
+    renovarSessaoDipraia,
+    true
+  );
 });
 
-setInterval(verificarSessaoExpirada, 60000);
-
-window.addEventListener('load', () => {
-  verificarSessaoExpirada();
-  atualizarAtividadeUsuario();
-});
-
-
-
-/* ===== restaura login ao atualizar ===== */
-
-window.addEventListener('DOMContentLoaded', () => {
-  const savedUser = localStorage.getItem('currentUser');
-
-  if (savedUser) {
-    try {
-      currentUser = JSON.parse(savedUser);
-
-      if (typeof renderNavUser === 'function') {
-        renderNavUser();
-      }
-
-      const loginScreen = document.getElementById('login-screen');
-      const dashboard = document.getElementById('dashboard');
-
-      if (loginScreen) loginScreen.style.display = 'none';
-      if (dashboard) dashboard.style.display = 'block';
-
-    } catch(e) {
-      console.error(e);
-      localStorage.removeItem('currentUser');
-    }
-  }
-});
+setInterval(verificarInatividadeDipraia, 60000);
 

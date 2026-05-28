@@ -5,6 +5,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ── estado ───────────────────────────────────────────────────
 let currentUser = null;
 let filterMens  = 'todos', filterCmd = 'abertas', filterAlert = 'todos';
+const expandedCmds = new Set();
 let editingMens = null, editingPlano = null, editingProd = null, editingUser = null, novoPlanoMensId = null;
 let selectedIcon = '💧';
 let fotoDataUrl  = null;
@@ -348,6 +349,17 @@ function previewFoto(input) {
 }
 
 // ── comandas ──────────────────────────────────────────────────
+// Cache de produtos para autocomplete instantâneo
+let _prodCache = null;
+async function getProdCache() {
+  if (!_prodCache) {
+    const { data } = await db.from('produtos').select('*').eq('arquivado', false).order('nome');
+    _prodCache = data || [];
+  }
+  return _prodCache;
+}
+function invalidateProdCache() { _prodCache = null; }
+
 async function renderComandas() {
   document.getElementById('lista-comandas').innerHTML = '<div class="loading">Carregando...</div>';
   const { data: cmds } = await db.from('comandas').select('*, comanda_itens(*)').order('aberta_em', { ascending: false });
@@ -360,6 +372,7 @@ async function renderComandas() {
     const tot   = itens.reduce((a,i) => a + i.preco_unitario*i.quantidade, 0);
     const qtd   = itens.reduce((a,i) => a + i.quantidade, 0);
     const isOpen = c.status === 'aberta';
+    const isExpanded = expandedCmds.has(c.id);
     const itensHtml = itens.length
       ? itens.map(it => `
           <div class="item-row">
@@ -378,12 +391,15 @@ async function renderComandas() {
     const addRow = isOpen ? `<div class="autocomplete">
       <div class="search-wrap" style="margin-top:10px">
         <span class="search-icon">🔍</span>
-        <input type="text" id="aci-${c.id}" placeholder="Buscar produto para adicionar..." oninput="showAC(${c.id},this.value)" autocomplete="off">
+        <input type="text" id="aci-${c.id}" placeholder="Buscar produto para adicionar..."
+          oninput="showAC(${c.id},this.value)"
+          onfocus="showAC(${c.id},this.value)"
+          autocomplete="off">
       </div>
       <div class="ac-list" id="acl-${c.id}"></div>
     </div>` : '';
     return `<div class="cmd-card" id="cmd-${c.id}">
-      <div class="cmd-header" onclick="toggleCmd(this)">
+      <div class="cmd-header" onclick="toggleCmd(this,${c.id})">
         <div class="cmd-avatar">${initials(c.cliente_nome)}</div>
         <div class="cmd-info">
           <div class="cmd-nome">${c.cliente_nome}</div>
@@ -392,10 +408,10 @@ async function renderComandas() {
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:13px;font-weight:700;color:var(--green)">${fmtR(tot)}</span>
           <span class="pill ${isOpen?'pill-open':'pill-closed'}">${isOpen?'Aberta':'Fechada'}</span>
-          <span style="font-size:13px;color:var(--text2)">▼</span>
+          <span style="font-size:13px;color:var(--text2)">${isExpanded?'▲':'▼'}</span>
         </div>
       </div>
-      <div class="cmd-body" style="display:none">
+      <div class="cmd-body" style="display:${isExpanded?'block':'none'}">
         ${itensHtml}${addRow}
         <div class="cmd-footer">
           <span style="font-size:13px;font-weight:600">Total: <span style="color:var(--green)">${fmtR(tot)}</span></span>
@@ -410,32 +426,38 @@ async function renderComandas() {
   }).join('');
 }
 
-function toggleCmd(header) {
+function toggleCmd(header, cmdId) {
   const body = header.nextElementSibling;
   const arr  = header.querySelector('span:last-child');
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   if (arr) arr.textContent = open ? '▼' : '▲';
+  if (open) expandedCmds.delete(cmdId); else expandedCmds.add(cmdId);
 }
 
 async function showAC(cmdId, q) {
   const list = document.getElementById('acl-'+cmdId);
-  if (!q.trim()) { list.classList.remove('show'); return; }
-  const { data: prods } = await db.from('produtos').select('*').eq('arquivado', false).ilike('nome', `%${q}%`).limit(6);
-  if (!(prods||[]).length) { list.classList.remove('show'); return; }
-  list.innerHTML = prods.map(p=>`<div class="ac-item" onclick="addItemAC(${cmdId},${p.id})"><span>${p.icone||'🛒'}</span>${p.nome} — ${fmtR(p.preco)}</div>`).join('');
+  if (!list) return;
+  const prods = await getProdCache();
+  const termo = q.trim().toLowerCase();
+  const filtrados = termo ? prods.filter(p => p.nome.toLowerCase().includes(termo)) : prods;
+  if (!filtrados.length) { list.classList.remove('show'); return; }
+  list.innerHTML = filtrados.slice(0,8).map(p=>`<div class="ac-item" onmousedown="addItemAC(${cmdId},${p.id})"><span>${p.icone||'🛒'}</span>${p.nome} — ${fmtR(p.preco)}</div>`).join('');
   list.classList.add('show');
 }
 
 async function addItemAC(cmdId, prodId) {
-  const { data: prod } = await db.from('produtos').select('*').eq('id', prodId).single();
+  const prods = await getProdCache();
+  const prod = prods.find(p => p.id === prodId);
   if (!prod) return;
   const { data: ex } = await db.from('comanda_itens').select('*').eq('comanda_id', cmdId).eq('produto_id', prodId).maybeSingle();
   if (ex) { await db.from('comanda_itens').update({ quantidade: ex.quantidade+1 }).eq('id', ex.id); }
   else    { await db.from('comanda_itens').insert({ comanda_id: cmdId, produto_id: prodId, produto_nome: prod.nome, produto_icone: prod.icone, preco_unitario: prod.preco, quantidade: 1 }); }
   const inp = document.getElementById('aci-'+cmdId); if (inp) inp.value = '';
   const lst = document.getElementById('acl-'+cmdId); if (lst) lst.classList.remove('show');
-  toast('Produto adicionado!'); renderComandas();
+  toast('Produto adicionado!');
+  expandedCmds.add(cmdId);
+  renderComandas();
 }
 
 async function changeQty(cmdId, itemId, delta) {
@@ -444,9 +466,10 @@ async function changeQty(cmdId, itemId, delta) {
   const newQty = it.quantidade + delta;
   if (newQty <= 0) await db.from('comanda_itens').delete().eq('id', itemId);
   else             await db.from('comanda_itens').update({ quantidade: newQty }).eq('id', itemId);
+  expandedCmds.add(cmdId);
   renderComandas();
 }
-async function removerItem(itemId) { await db.from('comanda_itens').delete().eq('id', itemId); renderComandas(); }
+async function removerItem(itemId, cmdId) { await db.from('comanda_itens').delete().eq('id', itemId); expandedCmds.add(cmdId); renderComandas(); }
 
 async function fecharComanda(id) {
   if (!confirm('Fechar esta comanda?')) return;
@@ -610,9 +633,9 @@ async function renderProdutos(){
   }
   document.getElementById('lista-produtos').innerHTML=sections.join('')||`<div class="empty" style="padding:2rem">Nenhum produto.</div>`;
 }
-async function arquivarProd(id){if(!confirm('Arquivar este produto?'))return;await db.from('produtos').update({arquivado:true}).eq('id',id);toast('Produto arquivado');renderProdutos();}
-async function desarquivarProd(id){await db.from('produtos').update({arquivado:false}).eq('id',id);toast('Produto reativado');renderProdutos();}
-async function excluirProd(id){if(!confirm('Excluir este produto permanentemente?\n\nEsta ação não pode ser desfeita.'))return;const{error}=await db.from('produtos').delete().eq('id',id);if(error){toast('Erro ao excluir produto','error');return;}toast('Produto excluído','success');renderProdutos();}
+async function arquivarProd(id){if(!confirm('Arquivar este produto?'))return;await db.from('produtos').update({arquivado:true}).eq('id',id);toast('Produto arquivado');invalidateProdCache();renderProdutos();}
+async function desarquivarProd(id){await db.from('produtos').update({arquivado:false}).eq('id',id);toast('Produto reativado');invalidateProdCache();renderProdutos();}
+async function excluirProd(id){if(!confirm('Excluir este produto permanentemente?\n\nEsta ação não pode ser desfeita.'))return;const{error}=await db.from('produtos').delete().eq('id',id);if(error){toast('Erro ao excluir produto','error');return;}toast('Produto excluído','success');invalidateProdCache();renderProdutos();}
 async function abrirModalProd(id=null){
   editingProd=id;await fillCatSelect();
   if(id){const{data:p}=await db.from('produtos').select('*').eq('id',id).single();if(p){document.getElementById('modal-prod-title').textContent='Editar produto';document.getElementById('pp-nome').value=p.nome;document.getElementById('pp-preco').value=p.preco;document.getElementById('pp-cat').value=p.categoria;selectedIcon=p.icone||'🛒';}}
@@ -625,7 +648,7 @@ async function salvarProd(){
   const obj={nome,preco:parseFloat(document.getElementById('pp-preco').value)||0,categoria:document.getElementById('pp-cat').value,icone:selectedIcon};
   const{error}=editingProd?await db.from('produtos').update(obj).eq('id',editingProd):await db.from('produtos').insert({...obj,arquivado:false});
   if(error){toast('Erro ao salvar','error');return;}
-  toast('Produto salvo!','success');fecharModal();renderProdutos();
+  toast('Produto salvo!','success');invalidateProdCache();fecharModal();renderProdutos();
 }
 // ── gerenciar categorias ──────────────────────────────────────
 async function abrirGerenciarCats(){

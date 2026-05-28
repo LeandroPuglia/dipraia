@@ -69,6 +69,8 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
   currentUser = data;
+localStorage.setItem('currentUser', JSON.stringify(currentUser));
+atualizarAtividadeUsuario();
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
   document.getElementById('nav-username').textContent = data.nome;
@@ -92,7 +94,9 @@ function renderNavUser() {
 }
 
 
-function doLogout() {
+function doLogout(){
+localStorage.removeItem('currentUser');
+localStorage.removeItem('lastActivity');
   currentUser = null;
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -698,4 +702,67 @@ async function renderMens() {
       </div>`).join('')
     : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
 }
+
+
+
+/* ===== sessão persistente + timeout ===== */
+
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 min
+
+function atualizarAtividadeUsuario() {
+  if (!currentUser) return;
+  localStorage.setItem('lastActivity', Date.now().toString());
+}
+
+function verificarSessaoExpirada() {
+  const last = parseInt(localStorage.getItem('lastActivity') || '0', 10);
+
+  if (!last) return;
+
+  const agora = Date.now();
+
+  if ((agora - last) > SESSION_TIMEOUT) {
+    alert('Sessão encerrada por inatividade.');
+    doLogout();
+  }
+}
+
+['click','mousemove','keydown','scroll','touchstart'].forEach(evt => {
+  document.addEventListener(evt, atualizarAtividadeUsuario, true);
+});
+
+setInterval(verificarSessaoExpirada, 60000);
+
+window.addEventListener('load', () => {
+  verificarSessaoExpirada();
+  atualizarAtividadeUsuario();
+});
+
+
+
+/* ===== restaura login ao atualizar ===== */
+
+window.addEventListener('DOMContentLoaded', () => {
+  const savedUser = localStorage.getItem('currentUser');
+
+  if (savedUser) {
+    try {
+      currentUser = JSON.parse(savedUser);
+
+      if (typeof renderNavUser === 'function') {
+        renderNavUser();
+      }
+
+      const loginScreen = document.getElementById('login-screen');
+      const dashboard = document.getElementById('dashboard');
+
+      if (loginScreen) loginScreen.style.display = 'none';
+      if (dashboard) dashboard.style.display = 'block';
+
+    } catch(e) {
+      console.error(e);
+      localStorage.removeItem('currentUser');
+    }
+  }
+});
 

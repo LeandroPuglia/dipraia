@@ -68,6 +68,12 @@ async function doLogin() {
   const { data, error } = await db.from('usuarios').select('*').eq('login', l).eq('senha', s).single();
   btn.disabled = false; btn.textContent = 'Entrar';
   if (error || !data) { document.getElementById('login-error').style.display = 'block'; return; }
+  localStorage.setItem('dipraia_user', JSON.stringify(data));
+  sessionStorage.setItem('dipraia_alive', '1');
+  applyLogin(data);
+}
+
+function applyLogin(data) {
   currentUser = data;
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
@@ -76,6 +82,7 @@ async function doLogin() {
   renderNavUser();
   applyRole();
   navTo(data.role === 'admin' ? 'dashboard' : 'mensalistas');
+  startInactivityTimer();
 }
 
 
@@ -94,6 +101,9 @@ function renderNavUser() {
 
 function doLogout() {
   currentUser = null;
+  clearInactivityTimer();
+  localStorage.removeItem('dipraia_user');
+  sessionStorage.removeItem('dipraia_alive');
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('l-pass').value = '';
@@ -699,3 +709,48 @@ async function renderMens() {
     : `<div class="empty"><span class="empty-icon">👥</span>Nenhum encontrado</div>`;
 }
 
+
+// ── sessão persistente & inatividade ──────────────────────────
+const INACTIVITY_MS = 30 * 60 * 1000; // 30 minutos
+let inactivityTimer = null;
+
+function startInactivityTimer() {
+  clearInactivityTimer();
+  inactivityTimer = setTimeout(() => {
+    doLogout();
+    toast('Sessão encerrada por inatividade', 'error');
+  }, INACTIVITY_MS);
+}
+
+function clearInactivityTimer() {
+  if (inactivityTimer) { clearTimeout(inactivityTimer); inactivityTimer = null; }
+}
+
+function resetInactivityTimer() {
+  if (currentUser) startInactivityTimer();
+}
+
+// Qualquer interação do usuário reinicia o timer
+['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(evt =>
+  document.addEventListener(evt, resetInactivityTimer, { passive: true })
+);
+
+// ── inicialização: restaura sessão se for um refresh ──────────
+(function initSession() {
+  // sessionStorage é limpo ao fechar a aba, mas sobrevive ao refresh.
+  // Se 'dipraia_alive' existir, a aba foi apenas atualizada → restaura.
+  // Se não existir (aba foi fechada/reaberta) → exige novo login.
+  const alive = sessionStorage.getItem('dipraia_alive');
+  const saved = localStorage.getItem('dipraia_user');
+  if (alive && saved) {
+    try {
+      const user = JSON.parse(saved);
+      if (user && user.id) { applyLogin(user); return; }
+    } catch(e) {}
+  }
+  // Sem sessão válida: garante tela de login visível
+  localStorage.removeItem('dipraia_user');
+  sessionStorage.removeItem('dipraia_alive');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+})();

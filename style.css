@@ -103,6 +103,9 @@ nav { flex: 1; padding: 6px 0; overflow-y: auto; }
 /* ── TABLE ─────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+
+/* ── DASHBOARD CARDS — scroll horizontal nas tabelas ───────── */
+#dash-cmds, #dash-venc, #dash-inad { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 th { text-align: left; padding: 8px 10px; color: var(--text2); font-weight: 500; border-bottom: 1px solid var(--border); background: var(--bg3); font-size: 11px; white-space: nowrap; }
 td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
 tr:last-child td { border-bottom: none; }

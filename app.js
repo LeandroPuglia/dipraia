@@ -589,19 +589,26 @@ function selectIcon(ic){selectedIcon=ic;buildIconGrid();}
 async function renderProdutos(){
   const [{data:cats},{data:prods}]=await Promise.all([db.from('categorias').select('nome').order('nome'),db.from('produtos').select('*').order('nome')]);
   const catList=(cats||[]).map(c=>c.nome);const prodList=prods||[];
-  document.getElementById('lista-produtos').innerHTML=catList.map(cat=>{
-    const ps=prodList.filter(p=>p.categoria===cat);if(!ps.length)return'';
-    return`<div class="cat-section-title">${cat}</div>`+ps.map(p=>`
-      <div class="prod-card ${p.arquivado?'archived':''}">
+  function renderCard(p){
+    return`<div class="prod-card ${p.arquivado?'archived':''}">
         <div class="picon">${p.icone||'🛒'}</div>
-        <div class="plan-info"><div class="plan-name">${p.nome}${p.arquivado?' <span class="badge bgr">Arquivado</span>':''}</div><div class="plan-detail">${fmtR(p.preco)} · ${p.categoria}</div></div>
+        <div class="plan-info"><div class="plan-name">${p.nome}${p.arquivado?' <span class="badge bgr">Arquivado</span>':''}</div><div class="plan-detail">${fmtR(p.preco)} · ${p.categoria||'Sem categoria'}</div></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${!p.arquivado?`<button class="btn btn-sm" onclick="editarProd(${p.id})">✏️</button>`:''}
           <button class="btn btn-sm ${p.arquivado?'':'btn-warn'}" onclick="${p.arquivado?`desarquivarProd(${p.id})`:`arquivarProd(${p.id})`}">${p.arquivado?'🔄':'🗄️'}</button>
           <button class="btn btn-sm btn-danger" onclick="excluirProd(${p.id})">🗑️</button>
         </div>
-      </div>`).join('');
-  }).join('')||`<div class="empty" style="padding:2rem">Nenhum produto.</div>`;
+      </div>`;
+  }
+  const sections=catList.map(cat=>{
+    const ps=prodList.filter(p=>p.categoria===cat);if(!ps.length)return'';
+    return`<div class="cat-section-title">${cat}</div>`+ps.map(renderCard).join('');
+  });
+  const orphans=prodList.filter(p=>!catList.includes(p.categoria));
+  if(orphans.length){
+    sections.push(`<div class="cat-section-title" style="color:var(--text-muted)">Sem categoria</div>`+orphans.map(renderCard).join(''));
+  }
+  document.getElementById('lista-produtos').innerHTML=sections.join('')||`<div class="empty" style="padding:2rem">Nenhum produto.</div>`;
 }
 async function arquivarProd(id){if(!confirm('Arquivar este produto?'))return;await db.from('produtos').update({arquivado:true}).eq('id',id);toast('Produto arquivado');renderProdutos();}
 async function desarquivarProd(id){await db.from('produtos').update({arquivado:false}).eq('id',id);toast('Produto reativado');renderProdutos();}
@@ -651,8 +658,11 @@ async function salvarEditarCat(id){
   const input=document.getElementById('cat-edit-'+id);
   const nome=input?input.value.trim():'';
   if(!nome){toast('Informe o nome','error');return;}
+  const{data:catAtual}=await db.from('categorias').select('nome').eq('id',id).single();
+  const nomeAntigo=catAtual?catAtual.nome:null;
   const{error}=await db.from('categorias').update({nome}).eq('id',id);
   if(error){toast(error.code==='23505'?'Nome já existe':'Erro ao salvar','error');return;}
+  if(nomeAntigo&&nomeAntigo!==nome){await db.from('produtos').update({categoria:nome}).eq('categoria',nomeAntigo);}
   toast('Categoria atualizada!','success');
   await renderGerenciarCats();renderProdutos();
 }

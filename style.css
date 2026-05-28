@@ -327,28 +327,42 @@ tbody tr:hover td { background: var(--bg3); }
 }
 
 
-/* ── ações desktop ao lado do usuário ─────────────────────── */
-.nav-user-name {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+/* ===== usuário rodapé desktop ===== */
+
+.nav-user-bottom{
+  padding:12px;
+  border-top:1px solid #ddd;
 }
 
-.nav-user-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.nav-user-name-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
 }
 
-.nav-user-inline-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+.nav-user-name{
+  font-weight:600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
-.btn-inline {
-  padding: 4px 8px;
-  min-width: auto;
+.nav-user-role{
+  font-size:12px;
+  opacity:.75;
+  margin-top:4px;
+}
+
+.nav-user-actions-desktop{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+
+.btn-inline{
+  padding:4px 8px;
+  min-width:auto;
+  font-size:12px;
 }

@@ -71,30 +71,44 @@ async function doLogin() {
   currentUser = data;
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
-  
+  document.getElementById('nav-username').textContent = data.nome;
   document.getElementById('nav-userrole').textContent = data.role === 'admin' ? 'Administrador' : 'Atendente';
   renderNavUser();
   applyRole();
   navTo(data.role === 'admin' ? 'dashboard' : 'mensalistas');
 }
 
-function renderNavUser() {
-  const username = document.getElementById('nav-username');
-  if (username) {
-    username.innerHTML = `
-      <span class="nav-user-title">${currentUser.nome || ''}</span>
-      <div class="nav-user-inline-actions">
-        <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">🔑</button>
-        <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">Sair</button>
-      </div>
-    `;
-  }
 
-  const role = document.getElementById('nav-userrole');
-  if (role) {
-    role.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Atendente';
-  }
+function renderNavUser() {
+  const box = document.querySelector('.nav-user-bottom');
+
+  if (!box || !currentUser) return;
+
+  box.innerHTML = `
+    <div class="nav-user-desktop">
+      <div class="nav-user-info">
+        <div class="nav-user-name-row">
+          <div class="nav-user-name">${currentUser.nome || ''}</div>
+
+          <div class="nav-user-actions-desktop">
+            <button class="btn btn-sm btn-inline" onclick="abrirModalSenha()" title="Alterar senha">
+              🔑
+            </button>
+
+            <button class="btn btn-sm btn-inline" onclick="doLogout()" title="Sair">
+              Sair
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-user-role">
+          ${currentUser.role === 'admin' ? 'Administrador' : 'Atendente'}
+        </div>
+      </div>
+    </div>
+  `;
 }
+
 
 function doLogout() {
   currentUser = null;

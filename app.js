@@ -709,82 +709,183 @@ async function salvarCat(){
 
 
 // ── carteirinha VIP ───────────────────────────────────────────
+// ── carteirinha VIP ───────────────────────────────────────────
+let _vipMembro = null;
+
 async function abrirCarteirinha(id) {
   const { data: m } = await db.from('mensalistas').select('*').eq('id', id).single();
   if (!m) return;
-  const wrap = document.getElementById('vip-card-wrap');
-  const validade = m.fim_plano ? fmtDate(m.fim_plano) : 'Sem plano';
-  const plano    = m.plano_atual || '';
-  const fotoHtml = m.foto_url
-    ? `<img src="${m.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px" crossorigin="anonymous">`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;background:#222;border-radius:10px;color:#fff">${initials(m.nome)}</div>`;
-
-  wrap.innerHTML = `
-    <div id="vip-card-inner" style="
-      background:#111;
-      border:5px solid #F4600C;
-      border-radius:12px;
-      display:flex;
-      flex-direction:column;
-      font-family:'Arial Black',Arial,sans-serif;
-      padding:0;
-      overflow:hidden;
-      position:relative;
-      width:100%
-    ">
-      <!-- top bar -->
-      <div style="background:#F4600C;height:6px;width:100%"></div>
-
-      <!-- main content -->
-      <div style="display:flex;align-items:center;gap:20px;padding:22px 24px">
-
-        <!-- left: logo + photo -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex-shrink:0">
-          <img src="Logotipo.PNG" style="width:64px;height:64px;object-fit:contain" crossorigin="anonymous" onerror="this.style.display='none'">
-          <div style="
-            width:110px;height:110px;
-            border-radius:12px;
-            border:3px solid #F4600C;
-            overflow:hidden;
-            background:#222;
-            flex-shrink:0
-          ">${fotoHtml}</div>
-          <div style="color:#F4600C;font-size:11px;font-weight:900;letter-spacing:1px">@ctdipraia</div>
-        </div>
-
-        <!-- right: info -->
-        <div style="flex:1;min-width:0">
-          <div style="color:#F4600C;font-size:22px;font-weight:900;line-height:1.1;margin-bottom:6px">Membership<br>VIP Card</div>
-          ${plano ? `<div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.7;margin-bottom:10px;text-transform:uppercase">${plano}</div>` : ''}
-          <div style="color:#fff;font-size:17px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">${m.nome}</div>
-          <div style="background:#F4600C;border-radius:6px;display:inline-block;padding:6px 14px">
-            <div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.85">VÁLIDO ATÉ</div>
-            <div style="color:#fff;font-size:20px;font-weight:900">${validade}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- footer -->
-      <div style="background:#1a1a1a;padding:10px 24px;text-align:center">
-        <div style="color:#aaa;font-size:11px;font-weight:700;font-style:italic">www.ctdipraia.com.br</div>
-      </div>
-
-      <!-- bottom bar -->
-      <div style="background:#F4600C;height:6px;width:100%"></div>
-    </div>`;
+  _vipMembro = m;
   abrirModal('modal-carteirinha');
+  // small delay so modal is visible before drawing
+  setTimeout(() => renderVipCanvas(m, false), 80);
+}
+
+function wrapTextCanvas(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let ly = y;
+  for (let i = 0; i < words.length; i++) {
+    const test = line + words[i] + ' ';
+    if (ctx.measureText(test).width > maxWidth && i > 0) {
+      ctx.fillText(line.trim(), x, ly);
+      line = words[i] + ' ';
+      ly += lineHeight;
+    } else { line = test; }
+  }
+  ctx.fillText(line.trim(), x, ly);
+}
+
+async function loadImgCanvas(src) {
+  return new Promise(res => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => res(img);
+    img.onerror = () => res(null);
+    img.src = src + (src.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  });
+}
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+async function renderVipCanvas(m, offscreen) {
+  const W=900, H=506; // ~16:9 landscape card
+  let canvas;
+  if (offscreen) {
+    canvas = document.createElement('canvas');
+  } else {
+    canvas = document.getElementById('vip-preview-canvas');
+  }
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+  const ORA='#F4600C', BLK='#0d0d0d', B=16;
+
+  // background
+  ctx.fillStyle=BLK; ctx.fillRect(0,0,W,H);
+
+  // border
+  ctx.strokeStyle=ORA; ctx.lineWidth=B;
+  ctx.strokeRect(B/2,B/2,W-B,H-B);
+
+  // left panel
+  const leftW=260;
+  ctx.fillStyle='#121212';
+  ctx.fillRect(B,B,leftW,H-B*2);
+
+  // orange divider line
+  ctx.strokeStyle=ORA; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(B+leftW,B); ctx.lineTo(B+leftW,H-B); ctx.stroke();
+
+  // @ctdipraia top-right
+  ctx.fillStyle=ORA; ctx.font='bold 16px Arial'; ctx.textAlign='right';
+  ctx.fillText('@ctdipraia', W-30, 42);
+
+  // LOGO
+  const logo = await loadImgCanvas('Logotipo.PNG');
+  const centerLeft = B + leftW/2;
+  let logoBottom = B+20;
+  if (logo) {
+    const lH=64, lW=lH*(logo.width/logo.height);
+    ctx.drawImage(logo, centerLeft-lW/2, logoBottom, lW, lH);
+    logoBottom += lH + 10;
+  }
+
+  // PHOTO
+  const pSize=170, pX=centerLeft-pSize/2, pY=logoBottom+4, pR=12;
+  ctx.save();
+  roundRectPath(ctx,pX,pY,pSize,pSize,pR);
+  ctx.clip();
+  if (m.foto_url) {
+    const foto = await loadImgCanvas(m.foto_url);
+    if (foto) {
+      const r=Math.max(pSize/foto.width,pSize/foto.height);
+      const dw=foto.width*r,dh=foto.height*r;
+      ctx.drawImage(foto,pX-(dw-pSize)/2,pY-(dh-pSize)/2,dw,dh);
+    } else {
+      ctx.fillStyle='#333'; ctx.fillRect(pX,pY,pSize,pSize);
+      ctx.fillStyle='#fff'; ctx.font='bold 52px Arial'; ctx.textAlign='center';
+      ctx.fillText(initials(m.nome),pX+pSize/2,pY+pSize/2+18);
+    }
+  } else {
+    ctx.fillStyle='#333'; ctx.fillRect(pX,pY,pSize,pSize);
+    ctx.fillStyle='#fff'; ctx.font='bold 52px Arial'; ctx.textAlign='center';
+    ctx.fillText(initials(m.nome),pX+pSize/2,pY+pSize/2+18);
+  }
+  ctx.restore();
+  // photo border
+  ctx.strokeStyle=ORA; ctx.lineWidth=3;
+  roundRectPath(ctx,pX,pY,pSize,pSize,pR); ctx.stroke();
+
+  // DIPRAIA label
+  ctx.fillStyle=ORA; ctx.font='bold 18px Arial'; ctx.textAlign='center';
+  ctx.fillText('DIPRAIA', centerLeft, pY+pSize+28);
+
+  // ── RIGHT ──
+  const rx = B+leftW+30, rw = W-rx-30;
+
+  // Membership VIP Card
+  ctx.fillStyle=ORA; ctx.textAlign='left';
+  ctx.font='bold 62px Arial'; ctx.fillText('Membership', rx, 90);
+  ctx.font='bold 62px Arial'; ctx.fillText('VIP Card', rx, 158);
+
+  // divider
+  ctx.strokeStyle=ORA; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(rx,172); ctx.lineTo(W-30,172); ctx.stroke();
+
+  // Name
+  ctx.fillStyle='#fff'; ctx.font='bold 30px Arial'; ctx.textAlign='left';
+  // truncate if too long
+  let nome = (m.nome||'').toUpperCase();
+  while (ctx.measureText(nome).width > rw && nome.length > 1) nome = nome.slice(0,-1);
+  ctx.fillText(nome, rx, 212);
+
+  // Validade label
+  ctx.fillStyle='#aaa'; ctx.font='16px Arial';
+  ctx.fillText('VÁLIDO ATÉ', rx, 248);
+
+  // Validade value — always from m.fim_plano
+  const valStr = m.fim_plano ? fmtDate(m.fim_plano) : 'Sem plano';
+  ctx.fillStyle='#fff'; ctx.font='bold 38px Arial';
+  ctx.fillText(valStr, rx, 292);
+
+  // Benefits box
+  const bX=rx-8, bY=308, bW=rw+8, bH=H-bY-B-10;
+  ctx.fillStyle='#1c1c1c';
+  roundRectPath(ctx,bX,bY,bW,bH,8); ctx.fill();
+
+  ctx.fillStyle='#ddd'; ctx.font='italic 13.5px Arial'; ctx.textAlign='center';
+  const benefits='Acesso aos rotativos (exceto horários de liga, torneios e eventos); 10% de desconto nos restaurantes Tahine, Otao e El Padre; 10% no chopp Unika';
+  wrapTextCanvas(ctx, benefits, bX+bW/2, bY+22, bW-20, 20);
+
+  ctx.fillStyle=ORA; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+  ctx.fillText('www.ctdipraia.com.br', bX+bW/2, bY+bH-12);
+
+  return canvas;
 }
 
 async function downloadCarteirinha() {
-  const el = document.getElementById('vip-card-inner');
-  if (!el) return;
+  if (!_vipMembro) return;
+  toast('Gerando imagem...');
   try {
-    const canvas = await html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null });
+    const canvas = await renderVipCanvas(_vipMembro, true);
     const link = document.createElement('a');
-    link.download = 'carteirinha-vip.png';
+    link.download = 'carteirinha-' + (_vipMembro.nome||'vip').toLowerCase().replace(/\s+/g,'-') + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+    toast('Download iniciado!', 'success');
   } catch(e) {
+    console.error(e);
     toast('Erro ao gerar imagem', 'error');
   }
 }
@@ -897,6 +998,7 @@ async function renderMens() {
         <div class="mens-card-row"><span>Vencimento</span><span>${fmtDate(m.fim_plano)}</span></div>
         <div class="mens-card-row"><span>Valor</span><span>${m.valor_plano ? fmtR0(m.valor_plano) + '/mês' : '—'}</span></div>
         <div class="mens-card-actions">
+          <button class="btn btn-sm btn-primary" onclick="abrirCarteirinha(${m.id})">🪪 Carteirinha</button>
           <button class="btn btn-sm" onclick="editarMens(${m.id})">✏️ Editar</button>
           <button class="btn btn-sm" onclick="adicionarNovoPlano(${m.id})">📋 Plano</button>
           <button class="btn btn-sm" onclick="verHistorico(${m.id})">📜 Histórico</button>

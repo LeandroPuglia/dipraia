@@ -352,13 +352,11 @@
   </div>
 
 
-  <div class="modal" id="modal-carteirinha" style="max-width:560px">
+  <div class="modal" id="modal-carteirinha" style="max-width:600px">
     <div class="modal-handle"></div>
     <div class="modal-title">🪪 Carteirinha VIP</div>
-    <div style="padding:0 4px 8px">
-      <div id="vip-card-wrap" style="border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.18)">
-        <!-- card rendered by JS -->
-      </div>
+    <div style="padding:0 4px 12px">
+      <canvas id="vip-preview-canvas" style="width:100%;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.3);display:block"></canvas>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="fecharModal()">Fechar</button>
@@ -370,7 +368,6 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>

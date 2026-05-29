@@ -234,7 +234,7 @@ async function renderMens() {
   document.getElementById('tb-mens').innerHTML = lista.length
     ? lista.map(m => `<tr>
         <td><div class="mens-avatar">${m.foto_url ? `<img src="${m.foto_url}" alt="">` : initials(m.nome)}</div></td>
-        <td><strong>${m.nome}</strong></td>
+        <td><strong style="cursor:pointer;color:var(--brand);text-decoration:underline dotted" onclick="abrirCarteirinha(${m.id})" title="Ver carteirinha">${m.nome}</strong></td>
         <td>${m.plano_atual||'—'}</td>
         <td>${fmtDate(m.fim_plano)}</td>
         <td>${m.valor_plano ? fmtR0(m.valor_plano) : '—'}</td>
@@ -707,6 +707,88 @@ async function salvarCat(){
   await renderGerenciarCats();renderProdutos();
 }
 
+
+// ── carteirinha VIP ───────────────────────────────────────────
+async function abrirCarteirinha(id) {
+  const { data: m } = await db.from('mensalistas').select('*').eq('id', id).single();
+  if (!m) return;
+  const wrap = document.getElementById('vip-card-wrap');
+  const validade = m.fim_plano ? fmtDate(m.fim_plano) : 'Sem plano';
+  const plano    = m.plano_atual || '';
+  const fotoHtml = m.foto_url
+    ? `<img src="${m.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px" crossorigin="anonymous">`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;background:#222;border-radius:10px;color:#fff">${initials(m.nome)}</div>`;
+
+  wrap.innerHTML = `
+    <div id="vip-card-inner" style="
+      background:#111;
+      border:5px solid #F4600C;
+      border-radius:12px;
+      display:flex;
+      flex-direction:column;
+      font-family:'Arial Black',Arial,sans-serif;
+      padding:0;
+      overflow:hidden;
+      position:relative;
+      width:100%
+    ">
+      <!-- top bar -->
+      <div style="background:#F4600C;height:6px;width:100%"></div>
+
+      <!-- main content -->
+      <div style="display:flex;align-items:center;gap:20px;padding:22px 24px">
+
+        <!-- left: logo + photo -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex-shrink:0">
+          <img src="Logotipo.PNG" style="width:64px;height:64px;object-fit:contain" crossorigin="anonymous" onerror="this.style.display='none'">
+          <div style="
+            width:110px;height:110px;
+            border-radius:12px;
+            border:3px solid #F4600C;
+            overflow:hidden;
+            background:#222;
+            flex-shrink:0
+          ">${fotoHtml}</div>
+          <div style="color:#F4600C;font-size:11px;font-weight:900;letter-spacing:1px">@ctdipraia</div>
+        </div>
+
+        <!-- right: info -->
+        <div style="flex:1;min-width:0">
+          <div style="color:#F4600C;font-size:22px;font-weight:900;line-height:1.1;margin-bottom:6px">Membership<br>VIP Card</div>
+          ${plano ? `<div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.7;margin-bottom:10px;text-transform:uppercase">${plano}</div>` : ''}
+          <div style="color:#fff;font-size:17px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px">${m.nome}</div>
+          <div style="background:#F4600C;border-radius:6px;display:inline-block;padding:6px 14px">
+            <div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.85">VÁLIDO ATÉ</div>
+            <div style="color:#fff;font-size:20px;font-weight:900">${validade}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- footer -->
+      <div style="background:#1a1a1a;padding:10px 24px;text-align:center">
+        <div style="color:#aaa;font-size:11px;font-weight:700;font-style:italic">www.ctdipraia.com.br</div>
+      </div>
+
+      <!-- bottom bar -->
+      <div style="background:#F4600C;height:6px;width:100%"></div>
+    </div>`;
+  abrirModal('modal-carteirinha');
+}
+
+async function downloadCarteirinha() {
+  const el = document.getElementById('vip-card-inner');
+  if (!el) return;
+  try {
+    const canvas = await html2canvas(el, { useCORS: true, scale: 2, backgroundColor: null });
+    const link = document.createElement('a');
+    link.download = 'carteirinha-vip.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e) {
+    toast('Erro ao gerar imagem', 'error');
+  }
+}
+
 // ── usuários ──────────────────────────────────────────────────
 async function renderUsuarios(){
   const{data:users}=await db.from('usuarios').select('*').order('nome');
@@ -783,7 +865,7 @@ async function renderMens() {
   document.getElementById('tb-mens').innerHTML = lista.length
     ? lista.map(m => `<tr>
         <td><div class="mens-avatar">${m.foto_url ? `<img src="${m.foto_url}" alt="">` : initials(m.nome)}</div></td>
-        <td><strong>${m.nome}</strong></td>
+        <td><strong style="cursor:pointer;color:var(--brand);text-decoration:underline dotted" onclick="abrirCarteirinha(${m.id})" title="Ver carteirinha">${m.nome}</strong></td>
         <td>${m.plano_atual || '—'}</td>
         <td>${fmtDate(m.fim_plano)}</td>
         <td>${m.valor_plano ? fmtR0(m.valor_plano) : '—'}</td>

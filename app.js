@@ -726,8 +726,7 @@ function buildVipCard(m) {
     ? `<img src="${m.foto_url}" alt="Foto" class="vip-user-photo" crossorigin="anonymous">`
     : `<div class="vip-user-photo vip-initials-fallback">${initials(m.nome)}</div>`;
 
-  document.getElementById('vip-card-wrap').innerHTML = `
-    <div id="vip-card-inner">
+  document.getElementById('vip-card-inner').innerHTML = `
       <div class="vip-header">@ctdipraia</div>
       <div class="vip-main">
         <div class="vip-left">
@@ -747,8 +746,21 @@ function buildVipCard(m) {
       <div class="vip-footer">
         <p class="vip-benefits">Acesso aos rotativos (exceto horários de liga, torneios e eventos); 10% de desconto nos restaurantes Tahine, Otao e El Padre; 10% no chopp Unika.</p>
         <p class="vip-website">www.ctdipraia.com.br</p>
-      </div>
-    </div>`;
+      </div>`;
+  scaleVipCard();
+}
+
+function scaleVipCard() {
+  const wrapper = document.getElementById('vip-card-scale-wrapper');
+  const modal   = document.getElementById('modal-carteirinha');
+  if (!wrapper || !modal) return;
+  // Available width = modal padding-aware content width
+  const available = modal.clientWidth - 32; // 16px padding each side
+  const cardW = 775;
+  const scale = Math.min(1, available / cardW);
+  wrapper.style.transform = `scale(${scale})`;
+  wrapper.style.height    = (550 * scale) + 'px';
+  wrapper.style.width     = (cardW * scale) + 'px';
 }
 
 async function downloadCarteirinha() {
@@ -944,3 +956,10 @@ function resetInactivityTimer() {
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
 })();
+
+// Re-escala carteirinha se janela redimensionar com modal aberto
+window.addEventListener('resize', () => {
+  if (document.getElementById('modal-carteirinha')?.classList.contains('open')) {
+    scaleVipCard();
+  }
+});

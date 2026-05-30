@@ -12,9 +12,21 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     /* ── VIP Card ── */
+    /* VIP Card — scale-to-fit via JS, tamanho nativo preservado para download */
+    #vip-card-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 4px 0 8px;
+      overflow: hidden;
+    }
+    #vip-card-scale-wrapper {
+      width: 775px;
+      height: 550px;
+      transform-origin: top center;
+      flex-shrink: 0;
+    }
     #vip-card-inner {
       width: 775px;
-      min-width: 775px;
       height: 550px;
       background-color: #050505;
       border: 14px solid #ff6600;
@@ -26,7 +38,6 @@
       flex-direction: column;
       color: #fff;
       font-family: 'Montserrat', sans-serif;
-      margin: 0 auto;
     }
     .vip-header {
       text-align: right;
@@ -134,7 +145,7 @@
     }
     .vip-footer {
       text-align: center;
-      margin-top: -15px;
+      margin-top: 0;
       padding-bottom: 5px;
     }
     .vip-benefits {
@@ -142,7 +153,7 @@
       font-size: 16px;
       font-weight: 200;
       line-height: 1.4;
-      margin: 0 -10px 20px -10px;
+      margin: 5px -10px 20px -10px;
       color: #fff;
     }
     .vip-website {
@@ -152,11 +163,6 @@
       margin: 0;
       letter-spacing: 1.4px;
       color: #fff;
-    }
-    /* Mobile scroll wrapper */
-    #modal-carteirinha .modal-body-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
     }
   </style>
 </head>
@@ -506,11 +512,15 @@
   <div class="modal" id="modal-carteirinha" style="max-width:820px;background:#222">
     <div class="modal-handle"></div>
     <div class="modal-title" style="color:#fff">🪪 Carteirinha VIP</div>
-    <div style="padding:0 4px 12px;overflow-x:auto">
-      <div id="vip-card-wrap"></div>
+    <div style="padding:0 4px 12px">
+      <div id="vip-card-wrap">
+        <div id="vip-card-scale-wrapper">
+          <div id="vip-card-inner"></div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer" style="background:#222;border-top:1px solid #444">
-      <button class="btn" onclick="fecharModal()" style="color:#fff;border-color:#666">Fechar</button>
+      <button class="btn" onclick="fecharModal()" style="color:#ff6600;border-color:#ff6600;background:transparent">Fechar</button>
       <button class="btn btn-primary" onclick="downloadCarteirinha()">⬇️ Baixar</button>
     </div>
   </div>
